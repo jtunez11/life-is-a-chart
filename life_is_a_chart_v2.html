@@ -1,0 +1,1727 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ชีวิตคือกราฟ — Trade Stats</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=Noto+Sans+Thai:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#111620;--s1:#181e2c;--s2:#1e2638;--s3:#232d42;
+  --b1:rgba(255,255,255,0.09);--b2:rgba(255,255,255,0.15);--b3:rgba(255,255,255,0.22);
+  --gold:#d4a843;--gold-l:#f0c96a;--gold-g:rgba(212,168,67,0.12);--gold-b:rgba(212,168,67,0.30);
+  --green:#2ed888;--green-g:rgba(46,216,136,0.10);--green-b:rgba(46,216,136,0.28);
+  --red:#f05a4a;--red-g:rgba(240,90,74,0.10);--red-b:rgba(240,90,74,0.28);
+  --blue:#4f8ef7;--blue-g:rgba(79,142,247,0.10);--blue-b:rgba(79,142,247,0.30);
+  --purple:#9b72f0;--amber:#e8a124;
+  --text:#d4deed;--text2:#8898ac;--text3:#4a5a6e;
+  --mono:'IBM Plex Mono',monospace;--sans:'Noto Sans Thai',sans-serif;
+  --r:10px;--r-sm:7px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{font-size:14px}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;-webkit-font-smoothing:antialiased}
+.topbar{background:var(--s1);border-bottom:1px solid var(--b1);padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;backdrop-filter:blur(12px)}
+.brand{display:flex;align-items:center;gap:12px}
+.brand-dot{width:8px;height:8px;border-radius:50%;background:var(--gold);box-shadow:0 0 8px var(--gold)}
+.brand-text{font-family:var(--mono);font-size:12px;color:var(--gold);letter-spacing:0.12em;font-weight:500}
+.brand-sub{font-size:10px;color:var(--text2);font-family:var(--mono);letter-spacing:0.08em;margin-top:1px}
+.topbar-right{display:flex;align-items:center;gap:16px}
+.topbar-pnl{font-family:var(--mono);font-size:20px;font-weight:600;letter-spacing:-0.01em}
+.nav-tabs{display:flex;gap:2px;background:var(--s2);border-radius:8px;padding:3px}
+.nav-tab{padding:6px 14px;border-radius:6px;font-family:var(--mono);font-size:11px;color:var(--text2);cursor:pointer;transition:all 0.15s;letter-spacing:0.05em;border:none;background:none}
+.nav-tab:hover{color:var(--text)}
+.nav-tab.active{background:var(--s1);color:var(--gold);border:1px solid var(--gold-b)}
+.page-wrap{display:none}.page-wrap.active{display:block}
+.page{max-width:960px;margin:0 auto;padding:28px 24px 60px}
+.section-eyebrow{font-family:var(--mono);font-size:9px;color:var(--text2);letter-spacing:0.16em;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.section-eyebrow::after{content:'';flex:1;height:1px;background:var(--b1)}
+.chart-card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);padding:20px 20px 16px;margin-bottom:28px}
+canvas#equity-chart{width:100%;height:180px;display:block}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:10px;margin-bottom:28px}
+.stat{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);padding:16px;transition:border-color 0.15s}
+.stat:hover{border-color:var(--b2)}
+.stat-label{font-family:var(--mono);font-size:9px;color:var(--text2);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:10px}
+.stat-val{font-family:var(--mono);font-size:22px;font-weight:600;letter-spacing:-0.02em;line-height:1}
+.stat-sub{font-size:11px;color:var(--text3);margin-top:6px;font-family:var(--mono)}
+.pos{color:var(--green)}.neg{color:var(--red)}.gold{color:var(--gold)}.neutral{color:var(--text)}
+.heatmap{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:28px}
+.heat-cell{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);padding:16px 12px;text-align:center;transition:border-color 0.2s,background 0.2s}
+.heat-icon{font-size:18px;margin-bottom:6px;display:block}
+.heat-name{font-family:var(--mono);font-size:9px;color:var(--text2);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:2px}
+.heat-time{font-size:9px;color:var(--text3);margin-bottom:10px;font-family:var(--mono)}
+.heat-val{font-family:var(--mono);font-size:16px;font-weight:600;letter-spacing:-0.01em}
+.heat-trades{font-size:10px;color:var(--text2);margin-top:4px;font-family:var(--mono)}
+.toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px}
+.toolbar-left{display:flex;align-items:center;gap:8px}
+.export-btn{padding:7px 14px;background:var(--s2);border:1px solid var(--b2);border-radius:6px;color:var(--text2);font-family:var(--mono);font-size:10px;cursor:pointer;transition:all 0.15s;letter-spacing:0.06em;display:flex;align-items:center;gap:6px}
+.export-btn:hover{border-color:var(--gold-b);color:var(--gold-l)}
+.form-card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);padding:28px;margin-bottom:28px;position:relative;overflow:hidden}
+.form-card::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,var(--gold) 0%,var(--purple) 55%,transparent 100%);opacity:0.7}
+.form-row{display:flex;gap:14px;margin-bottom:16px}
+.field{display:flex;flex-direction:column;gap:7px;flex:1;min-width:0}
+.field label{font-family:var(--mono);font-size:9px;color:var(--text2);letter-spacing:0.12em;text-transform:uppercase}
+.field input,.field select,.field textarea{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r-sm);color:var(--text);font-family:var(--mono);font-size:13px;padding:10px 14px;outline:none;transition:border-color 0.15s,box-shadow 0.15s;width:100%;-webkit-appearance:none}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--gold-b);box-shadow:0 0 0 3px var(--gold-g)}
+.field textarea{resize:vertical;min-height:72px;font-family:var(--sans);font-size:13px;line-height:1.6}
+.field select option{background:var(--s2)}
+.form-divider{border:none;border-top:1px solid var(--b1);margin:20px 0}
+.btn-group{display:flex;gap:7px;flex-wrap:wrap}
+.tog-btn{flex:1;min-width:0;padding:10px 10px;border-radius:var(--r-sm);border:1px solid var(--b1);background:var(--s2);color:var(--text2);font-family:var(--mono);font-size:11px;font-weight:500;cursor:pointer;text-align:center;transition:all 0.15s;letter-spacing:0.05em;white-space:nowrap}
+.tog-btn:hover{border-color:var(--b2);color:var(--text)}
+.tog-btn.tp.active{background:var(--green-g);border-color:var(--green-b);color:var(--green)}
+.tog-btn.sl.active{background:var(--red-g);border-color:var(--red-b);color:var(--red)}
+.tog-btn.tech.active{background:var(--gold-g);border-color:var(--gold-b);color:var(--gold-l)}
+.tog-btn.unit.active{background:var(--blue-g);border-color:var(--blue-b);color:var(--blue)}
+.sub-panel{display:none;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r-sm);padding:16px;margin-bottom:16px}
+.sub-panel.show{display:block}
+.sub-section{margin-bottom:14px}.sub-section:last-child{margin-bottom:0}
+.sub-label{font-family:var(--mono);font-size:9px;color:var(--text2);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:8px}
+.sub-btns{display:flex;flex-wrap:wrap;gap:6px}
+.sub-btn{padding:5px 11px;border-radius:5px;border:1px solid var(--b1);background:var(--s3);color:var(--text2);font-family:var(--mono);font-size:11px;cursor:pointer;transition:all 0.13s;white-space:nowrap}
+.sub-btn:hover{border-color:var(--gold-b);color:var(--gold-l)}
+.sub-btn.active{background:var(--gold-g);border-color:var(--gold-b);color:var(--gold-l)}
+.ict-notice{background:rgba(79,142,247,0.06);border:1px solid rgba(79,142,247,0.2);border-radius:var(--r-sm);padding:10px 14px;font-family:var(--mono);font-size:10px;color:var(--blue);letter-spacing:0.04em;margin-bottom:0;display:none}
+.ict-notice.show{display:block}
+.img-upload-label{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--s2);border:1px dashed var(--b2);border-radius:var(--r-sm);color:var(--text2);font-family:var(--mono);font-size:11px;padding:11px;cursor:pointer;transition:all 0.15s}
+.img-upload-label:hover{border-color:var(--gold-b);color:var(--gold-l)}
+.img-upload-label input{display:none}
+.img-preview-wrap{margin-top:8px;position:relative;display:none}
+.img-preview-wrap img{width:100%;max-height:140px;object-fit:cover;border-radius:6px;border:1px solid var(--b1);display:block}
+.img-clear-btn{position:absolute;top:6px;right:6px;background:rgba(7,9,12,0.82);border:1px solid var(--b2);color:var(--text2);border-radius:4px;font-size:11px;padding:3px 8px;cursor:pointer;transition:all 0.15s;font-family:var(--mono)}
+.img-clear-btn:hover{color:var(--red);border-color:var(--red-b)}
+.add-btn{width:100%;padding:13px;background:var(--gold-g);border:1px solid var(--gold-b);border-radius:var(--r-sm);color:var(--gold-l);font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:0.1em;cursor:pointer;margin-top:8px;transition:all 0.15s;text-transform:uppercase}
+.add-btn:hover{background:rgba(212,168,67,0.18);border-color:var(--gold)}
+.table-card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);overflow:hidden}
+.table-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead tr{border-bottom:1px solid var(--b2)}
+th{font-family:var(--mono);font-size:9px;color:var(--text2);letter-spacing:0.12em;text-transform:uppercase;padding:13px 14px;text-align:left;font-weight:400}
+tbody tr{border-bottom:1px solid var(--b1);transition:background 0.1s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--s2)}
+td{padding:12px 14px;font-family:var(--mono);font-size:11px;color:var(--text);vertical-align:middle}
+td.note-td{font-family:var(--sans);font-size:12px;color:var(--text2);max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:4px;font-size:9px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;gap:3px}
+.badge-tp{background:var(--green-g);color:var(--green);border:1px solid var(--green-b)}
+.badge-sl{background:var(--red-g);color:var(--red);border:1px solid var(--red-b)}
+.badge-buy{background:var(--blue-g);color:var(--blue);border:1px solid var(--blue-b)}
+.badge-sell{background:var(--red-g);color:var(--red);border:1px solid var(--red-b)}
+.badge-morning{background:rgba(232,161,36,0.08);color:#e8a124;border:1px solid rgba(232,161,36,0.2)}
+.badge-afternoon{background:rgba(79,142,247,0.08);color:var(--blue);border:1px solid rgba(79,142,247,0.2)}
+.badge-evening{background:rgba(155,114,240,0.08);color:var(--purple);border:1px solid rgba(155,114,240,0.2)}
+.badge-night{background:rgba(99,120,200,0.08);color:#7890d8;border:1px solid rgba(99,120,200,0.2)}
+.badge-instrument{background:var(--gold-g);color:var(--gold-l);border:1px solid var(--gold-b)}
+.badge-pts-pos{background:rgba(46,216,136,0.07);color:var(--green);border:1px solid var(--green-b);font-size:9px}
+.badge-pts-neg{background:rgba(240,90,74,0.07);color:var(--red);border:1px solid var(--red-b);font-size:9px}
+.del-btn{background:none;border:none;color:var(--text3);cursor:pointer;font-size:12px;padding:4px 7px;border-radius:4px;transition:all 0.15s}
+.del-btn:hover{color:var(--red);background:var(--red-g)}
+.thumb-btn{background:var(--s2);border:1px solid var(--b1);border-radius:4px;padding:3px 7px;color:var(--text2);font-size:12px;cursor:pointer;transition:all 0.15s}
+.thumb-btn:hover{border-color:var(--gold-b);color:var(--gold-l)}
+.lightbox{display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,0.9);align-items:center;justify-content:center}
+.lightbox.open{display:flex}
+.lightbox img{max-width:92vw;max-height:88vh;border-radius:8px;border:1px solid var(--b2)}
+.lightbox-close{position:fixed;top:18px;right:22px;background:var(--s1);border:1px solid var(--b2);color:var(--text2);border-radius:6px;font-size:13px;padding:6px 14px;cursor:pointer;font-family:var(--mono);transition:all 0.15s}
+.lightbox-close:hover{color:var(--red)}
+.empty-state{text-align:center;padding:48px 0;color:var(--text2)}
+.empty-state .ei{font-size:26px;margin-bottom:10px;opacity:0.5}
+.empty-state p{font-family:var(--mono);font-size:11px;letter-spacing:0.06em}
+.disc-hero{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);padding:32px;margin-bottom:24px;position:relative;overflow:hidden}
+.disc-hero::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,var(--purple) 0%,var(--blue) 50%,transparent 100%);opacity:0.8}
+.disc-hero-title{font-family:var(--mono);font-size:22px;font-weight:600;color:var(--text);letter-spacing:-0.02em;margin-bottom:6px}
+.disc-hero-sub{font-size:13px;color:var(--text2);line-height:1.6}
+.rules-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-bottom:28px}
+.rule-card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);padding:20px;transition:border-color 0.2s}
+.rule-card:hover{border-color:var(--b2)}
+.rule-num{font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px}
+.rule-title{font-family:var(--mono);font-size:14px;font-weight:600;color:var(--text);margin-bottom:8px;letter-spacing:-0.01em}
+.rule-body{font-size:13px;color:var(--text2);line-height:1.7}
+.rule-tag{display:inline-block;margin-top:12px;padding:3px 8px;border-radius:4px;font-family:var(--mono);font-size:9px;letter-spacing:0.07em;text-transform:uppercase}
+.tag-mindset{background:rgba(155,114,240,0.1);color:var(--purple);border:1px solid rgba(155,114,240,0.25)}
+.tag-risk{background:var(--red-g);color:var(--red);border:1px solid var(--red-b)}
+.tag-process{background:var(--gold-g);color:var(--gold-l);border:1px solid var(--gold-b)}
+.tag-timing{background:var(--blue-g);color:var(--blue);border:1px solid var(--blue-b)}
+.checklist-card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);padding:24px;margin-bottom:24px}
+.checklist-title{font-family:var(--mono);font-size:11px;color:var(--text2);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:18px}
+.check-item{display:flex;align-items:flex-start;gap:14px;padding:12px 8px;border-bottom:1px solid var(--b1);cursor:pointer;transition:background 0.1s;border-radius:6px}
+.check-item:last-child{border-bottom:none}
+.check-item:hover{background:var(--s2)}
+.check-box{width:18px;height:18px;border:1px solid var(--b2);border-radius:4px;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:all 0.15s;font-size:11px}
+.check-item.checked .check-box{background:var(--green-g);border-color:var(--green-b);color:var(--green)}
+.check-text{flex:1}
+.check-label{font-size:13px;color:var(--text);margin-bottom:3px;transition:color 0.15s}
+.check-item.checked .check-label{color:var(--text3);text-decoration:line-through}
+.check-desc{font-size:11px;color:var(--text2);font-family:var(--mono);line-height:1.5}
+.quote-card{background:var(--s1);border:1px solid var(--b1);border-left:3px solid var(--gold);border-radius:var(--r);padding:24px 28px;margin-bottom:24px}
+.quote-text{font-size:16px;color:var(--text);line-height:1.8;font-style:italic;margin-bottom:10px}
+.quote-src{font-family:var(--mono);font-size:10px;color:var(--text2);letter-spacing:0.08em}
+.reset-check-btn{padding:8px 16px;background:transparent;border:1px solid var(--b2);border-radius:6px;color:var(--text2);font-family:var(--mono);font-size:10px;cursor:pointer;transition:all 0.15s;letter-spacing:0.06em}
+.reset-check-btn:hover{border-color:var(--gold-b);color:var(--gold-l)}
+.dir-big-group{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.dir-big-btn{padding:16px 10px;border-radius:var(--r-sm);border:1px solid var(--b1);background:var(--s2);color:var(--text2);font-family:var(--mono);font-size:14px;font-weight:600;cursor:pointer;text-align:center;transition:all 0.15s;letter-spacing:0.05em;display:flex;align-items:center;justify-content:center;gap:8px}
+.dir-big-btn:hover{border-color:var(--b2);color:var(--text)}
+.dir-big-btn.buy.active{background:var(--blue-g);border-color:var(--blue-b);color:var(--blue);box-shadow:0 0 18px rgba(79,142,247,0.15)}
+.dir-big-btn.sell.active{background:var(--red-g);border-color:var(--red-b);color:var(--red);box-shadow:0 0 18px rgba(240,90,74,0.15)}
+.inst-group{display:flex;flex-wrap:wrap;gap:8px}
+.inst-btn{padding:9px 16px;border-radius:20px;border:1px solid var(--b1);background:var(--s2);color:var(--text2);font-family:var(--mono);font-size:11px;font-weight:500;cursor:pointer;transition:all 0.15s;white-space:nowrap;display:flex;align-items:center;gap:6px}
+.inst-btn:hover{border-color:var(--b2);color:var(--text)}
+.inst-btn.active{background:var(--gold-g);border-color:var(--gold-b);color:var(--gold-l)}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
+
+/* ══ GAME ══ */
+.game-wrap{max-width:700px;margin:0 auto;padding:28px 20px 60px}
+.game-hero{text-align:center;margin-bottom:24px}
+.game-title{font-family:var(--mono);font-size:20px;font-weight:600;color:var(--gold-l);letter-spacing:-0.01em;margin-bottom:6px}
+.game-sub{font-size:13px;color:var(--text2);line-height:1.6}
+.game-topbar{display:flex;align-items:center;justify-content:space-between;background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);padding:14px 20px;margin-bottom:16px;flex-wrap:wrap;gap:12px}
+.game-stat{text-align:center}
+.game-stat-label{font-family:var(--mono);font-size:9px;color:var(--text2);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px}
+.game-stat-val{font-family:var(--mono);font-size:18px;font-weight:600;color:var(--gold-l)}
+.game-btns{display:flex;gap:8px;flex-wrap:wrap}
+.game-btn{padding:8px 16px;border-radius:var(--r-sm);border:1px solid var(--b2);background:var(--s2);color:var(--text2);font-family:var(--mono);font-size:11px;cursor:pointer;transition:all 0.15s;letter-spacing:0.05em}
+.game-btn:hover{border-color:var(--gold-b);color:var(--gold-l)}
+.game-btn.primary{border-color:var(--gold-b);background:var(--gold-g);color:var(--gold-l)}
+.game-btn.danger{border-color:var(--red-b);background:var(--red-g);color:var(--red)}
+.difficulty-row{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.diff-btn{flex:1;min-width:80px;padding:10px;border-radius:var(--r-sm);border:1px solid var(--b1);background:var(--s2);color:var(--text2);font-family:var(--mono);font-size:11px;cursor:pointer;text-align:center;transition:all 0.15s}
+.diff-btn:hover{border-color:var(--b2)}
+.diff-btn.active{border-color:var(--gold-b);background:var(--gold-g);color:var(--gold-l)}
+#tubes-area{display:flex;flex-wrap:wrap;justify-content:center;gap:20px;min-height:280px;padding:28px 20px;background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);margin-bottom:16px;position:relative;align-items:flex-end}
+.tube-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer}
+.tube-label{font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:0.06em}
+.tube{width:46px;height:184px;border:1.5px solid rgba(255,255,255,0.12);border-top:none;border-radius:0 0 23px 23px;position:relative;overflow:hidden;background:rgba(255,255,255,0.02);transition:border-color 0.2s,transform 0.15s,box-shadow 0.2s;display:flex;flex-direction:column}
+.tube.selected{border-color:var(--gold);box-shadow:0 0 20px rgba(212,168,67,0.35);transform:translateY(-10px)}
+.tube.complete{border-color:var(--green);box-shadow:0 0 14px rgba(46,216,136,0.3)}
+.tube.hint-from{border-color:var(--blue);box-shadow:0 0 14px rgba(79,142,247,0.4);transform:translateY(-8px)}
+.tube.hint-to{border-color:var(--purple);box-shadow:0 0 12px rgba(155,114,240,0.35)}
+.tube-layer{width:100%;transition:height 0.3s cubic-bezier(0.4,0,0.2,1),opacity 0.2s}
+.tube-layer:last-child{border-radius:0 0 22px 22px}
+@keyframes pour-in{0%{transform:scaleY(0) translateY(-100%);opacity:0;transform-origin:top}60%{transform:scaleY(1.08) translateY(0);opacity:1;transform-origin:top}100%{transform:scaleY(1) translateY(0);opacity:1;transform-origin:top}}
+.tube-layer.new-pour{animation:pour-in 0.32s cubic-bezier(0.22,1,0.36,1) forwards}
+.win-overlay{display:none;position:absolute;inset:0;background:rgba(0,0,0,0.88);border-radius:var(--r);flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:10}
+.win-overlay.show{display:flex}
+@keyframes bounce{0%{transform:translateY(0)}100%{transform:translateY(-12px)}}
+.win-emoji{font-size:52px;animation:bounce 0.6s ease infinite alternate}
+.win-title{font-family:var(--mono);font-size:22px;font-weight:600;color:var(--green);letter-spacing:-0.01em}
+.win-sub{font-size:14px;color:var(--text2)}
+.win-btn{padding:12px 28px;border-radius:var(--r-sm);border:1px solid var(--green-b);background:var(--green-g);color:var(--green);font-family:var(--mono);font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;letter-spacing:0.06em}
+.win-btn:hover{background:rgba(46,216,136,0.2)}
+.surprise-section{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);padding:24px;margin-bottom:24px}
+.surprise-title{font-family:var(--mono);font-size:11px;color:var(--gold-l);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:6px}
+.surprise-sub{font-size:12px;color:var(--text2);margin-bottom:18px;line-height:1.6}
+.reveal-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;margin-bottom:18px;border-radius:10px;overflow:hidden;border:1px solid var(--b1)}
+.reveal-cell{aspect-ratio:1;position:relative;overflow:hidden;background:var(--s3)}
+.reveal-cell canvas{display:block;width:100%;height:100%}
+.reveal-cell .cover{position:absolute;inset:0;background:var(--s3);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:22px;color:var(--text3);transition:transform 0.45s cubic-bezier(0.4,0,0.2,1),opacity 0.4s ease;z-index:2;font-weight:600}
+.reveal-cell.opened .cover{transform:scale(0) rotateY(90deg);opacity:0;pointer-events:none}
+.reveal-progress{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.reveal-bar-track{flex:1;height:4px;background:var(--b1);border-radius:2px;overflow:hidden}
+.reveal-bar-fill{height:100%;background:var(--gold);border-radius:2px;transition:width 0.4s ease}
+.reveal-bar-label{font-family:var(--mono);font-size:10px;color:var(--text2);white-space:nowrap}
+.guess-section{margin-top:14px}
+.guess-input-wrap{display:flex;gap:8px;margin-bottom:10px}
+.guess-input{flex:1;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r-sm);color:var(--text);font-family:var(--sans);font-size:13px;padding:9px 14px;outline:none;transition:border-color 0.15s}
+.guess-input:focus{border-color:var(--gold-b);box-shadow:0 0 0 3px var(--gold-g)}
+.guess-btn{padding:9px 18px;border-radius:var(--r-sm);border:1px solid var(--gold-b);background:var(--gold-g);color:var(--gold-l);font-family:var(--mono);font-size:11px;font-weight:600;cursor:pointer;transition:all 0.15s;letter-spacing:0.06em;white-space:nowrap}
+.guess-btn:hover{background:rgba(212,168,67,0.2)}
+.guess-result{font-family:var(--mono);font-size:12px;padding:8px 14px;border-radius:6px;display:none}
+.guess-result.correct{background:var(--green-g);border:1px solid var(--green-b);color:var(--green)}
+.guess-result.wrong{background:var(--red-g);border:1px solid var(--red-b);color:var(--red)}
+.guess-history{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px}
+.guess-tag{padding:3px 9px;border-radius:4px;font-family:var(--mono);font-size:10px;background:var(--s2);border:1px solid var(--b1);color:var(--text2)}
+.timer-bar{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.timer-label{font-family:var(--mono);font-size:9px;color:var(--text2);letter-spacing:0.1em;text-transform:uppercase;white-space:nowrap}
+.timer-val{font-family:var(--mono);font-size:20px;font-weight:600;color:var(--green);min-width:54px}
+.timer-track{flex:1;min-width:80px;height:4px;background:var(--b1);border-radius:2px;overflow:hidden}
+.timer-fill{height:100%;background:var(--green);border-radius:2px;transition:width 1s linear,background 0.3s}
+.timer-btns{display:flex;gap:6px;flex-wrap:wrap}
+.timer-btn{padding:6px 12px;border-radius:6px;border:1px solid var(--b2);background:var(--s2);color:var(--text2);font-family:var(--mono);font-size:10px;cursor:pointer;transition:all 0.15s}
+.timer-btn:hover{border-color:var(--gold-b);color:var(--gold-l)}
+.timer-btn.active-timer{border-color:var(--green-b);color:var(--green);background:var(--green-g)}
+.mindset-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-top:4px}
+.mindset-card{background:var(--s1);border:1px solid var(--b1);border-radius:8px;padding:16px;text-align:center}
+.mindset-emoji{font-size:24px;margin-bottom:8px}
+.mindset-title{font-family:var(--mono);font-size:11px;color:var(--gold-l);margin-bottom:6px;letter-spacing:0.04em}
+.mindset-body{font-size:12px;color:var(--text2);line-height:1.6}
+
+/* ══ WISH LIST ══ */
+.wish-wrap{max-width:800px;margin:0 auto;padding:28px 20px 60px}
+.wish-hero{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);padding:28px;margin-bottom:24px;position:relative;overflow:hidden}
+.wish-hero::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,var(--gold) 0%,var(--green) 60%,transparent 100%)}
+.wish-hero-top{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:20px}
+.wish-hero-title{font-family:var(--mono);font-size:18px;font-weight:600;color:var(--gold-l)}
+.wish-hero-sub{font-size:13px;color:var(--text2);margin-top:4px;line-height:1.6}
+.wish-pnl-box{text-align:right}
+.wish-pnl-label{font-family:var(--mono);font-size:9px;color:var(--text2);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:4px}
+.wish-pnl-val{font-family:var(--mono);font-size:28px;font-weight:600}
+.wish-pnl-thb{font-family:var(--mono);font-size:13px;color:var(--gold);margin-top:2px}
+.wish-progress-label{font-family:var(--mono);font-size:9px;color:var(--text2);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px}
+.wish-progress-wrap{display:flex;align-items:center;gap:12px}
+.wish-progress-track{flex:1;height:6px;background:var(--b1);border-radius:3px;overflow:hidden}
+.wish-progress-fill{height:100%;border-radius:3px;transition:width 0.5s ease,background 0.3s}
+.wish-progress-pct{font-family:var(--mono);font-size:12px;font-weight:600;min-width:40px;text-align:right}
+.wish-exchange-bar{background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:12px 16px;margin-bottom:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.wish-ex-label{font-family:var(--mono);font-size:9px;color:var(--text2);letter-spacing:0.1em;text-transform:uppercase}
+.wish-ex-input{background:var(--s1);border:1px solid var(--b1);border-radius:6px;color:var(--text);font-family:var(--mono);font-size:13px;padding:6px 12px;outline:none;width:110px;transition:border-color 0.15s}
+.wish-ex-input:focus{border-color:var(--gold-b)}
+.wish-ex-hint{font-family:var(--mono);font-size:10px;color:var(--text2)}
+.wish-add-card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);padding:24px;margin-bottom:24px;position:relative;overflow:hidden}
+.wish-add-card::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,var(--purple) 0%,var(--gold) 60%,transparent 100%)}
+.wish-form-row{display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.wish-field{display:flex;flex-direction:column;gap:6px;flex:1;min-width:140px}
+.wish-field label{font-family:var(--mono);font-size:9px;color:var(--text2);letter-spacing:0.12em;text-transform:uppercase}
+.wish-field input,.wish-field select{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r-sm);color:var(--text);font-family:var(--mono);font-size:13px;padding:9px 13px;outline:none;transition:border-color 0.15s;width:100%}
+.wish-field input:focus,.wish-field select:focus{border-color:var(--gold-b);box-shadow:0 0 0 3px var(--gold-g)}
+.wish-add-btn{width:100%;padding:12px;background:var(--gold-g);border:1px solid var(--gold-b);border-radius:var(--r-sm);color:var(--gold-l);font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:0.1em;cursor:pointer;margin-top:4px;transition:all 0.15s;text-transform:uppercase}
+.wish-add-btn:hover{background:rgba(212,168,67,0.18)}
+.priority-btns{display:flex;gap:6px}
+.priority-btn{flex:1;padding:9px 6px;border-radius:var(--r-sm);border:1px solid var(--b1);background:var(--s2);color:var(--text2);font-family:var(--mono);font-size:11px;cursor:pointer;text-align:center;transition:all 0.15s}
+.priority-btn.p1.active{background:rgba(240,90,74,0.1);border-color:rgba(240,90,74,0.3);color:var(--red)}
+.priority-btn.p2.active{background:var(--gold-g);border-color:var(--gold-b);color:var(--gold-l)}
+.priority-btn.p3.active{background:var(--green-g);border-color:var(--green-b);color:var(--green)}
+.wish-summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:24px}
+.wish-sum-stat{background:var(--s1);border:1px solid var(--b1);border-radius:8px;padding:14px;text-align:center}
+.wish-sum-label{font-family:var(--mono);font-size:9px;color:var(--text2);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px}
+.wish-sum-val{font-family:var(--mono);font-size:18px;font-weight:600}
+.wish-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-bottom:28px}
+.wish-card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);padding:18px;position:relative;transition:border-color 0.2s,transform 0.15s}
+.wish-card:hover{border-color:var(--b2);transform:translateY(-2px)}
+.wish-card.bought{border-color:var(--green-b);background:rgba(46,216,136,0.04)}
+.wish-bought-badge{position:absolute;top:10px;right:10px;background:var(--green-g);border:1px solid var(--green-b);color:var(--green);font-family:var(--mono);font-size:9px;padding:2px 8px;border-radius:4px;letter-spacing:0.06em}
+.wish-can-badge{position:absolute;top:10px;right:10px;background:var(--gold-g);border:1px solid var(--gold-b);color:var(--gold-l);font-family:var(--mono);font-size:9px;padding:2px 8px;border-radius:4px;letter-spacing:0.06em}
+.wish-card-emoji{font-size:26px;margin-bottom:10px}
+.wish-card-name{font-family:var(--mono);font-size:14px;font-weight:600;color:var(--text);margin-bottom:3px;line-height:1.3}
+.wish-card-cat{font-size:11px;color:var(--text2);margin-bottom:12px}
+.wish-card-price{font-family:var(--mono);font-size:20px;font-weight:600;margin-bottom:2px}
+.wish-card-thb{font-family:var(--mono);font-size:11px;color:var(--text2);margin-bottom:10px}
+.wish-card-bar{height:4px;background:var(--b1);border-radius:2px;overflow:hidden;margin-bottom:6px}
+.wish-card-bar-fill{height:100%;border-radius:2px;transition:width 0.4s ease}
+.wish-card-pct{font-family:var(--mono);font-size:10px;color:var(--text2);margin-bottom:12px}
+.wish-card-priority{display:inline-block;padding:2px 8px;border-radius:4px;font-family:var(--mono);font-size:9px;letter-spacing:0.06em;margin-bottom:12px}
+.pri-high{background:rgba(240,90,74,0.1);color:var(--red);border:1px solid rgba(240,90,74,0.25)}
+.pri-med{background:var(--gold-g);color:var(--gold-l);border:1px solid var(--gold-b)}
+.pri-low{background:var(--green-g);color:var(--green);border:1px solid var(--green-b)}
+.wish-card-actions{display:flex;gap:6px}
+.wish-buy-btn{flex:1;padding:7px;border-radius:6px;border:1px solid var(--green-b);background:var(--green-g);color:var(--green);font-family:var(--mono);font-size:11px;cursor:pointer;transition:all 0.15s;font-weight:500}
+.wish-buy-btn:hover{background:rgba(46,216,136,0.18)}
+.wish-buy-btn.unbuy{border-color:var(--b2);background:var(--s2);color:var(--text2)}
+.wish-del-btn{padding:7px 12px;border-radius:6px;border:1px solid var(--b2);background:var(--s2);color:var(--text3);font-family:var(--mono);font-size:11px;cursor:pointer;transition:all 0.15s}
+.wish-del-btn:hover{border-color:var(--red-b);color:var(--red);background:var(--red-g)}
+.wish-empty{text-align:center;padding:40px;color:var(--text2);font-family:var(--mono);font-size:12px;grid-column:1/-1}
+.wish-empty p:first-child{font-size:28px;margin-bottom:10px}
+
+/* ══ TOOLS PAGE ══ */
+.tools-wrap{max-width:860px;margin:0 auto;padding:28px 20px 60px}
+.tools-hero{text-align:center;margin-bottom:32px}
+.tools-hero-title{font-family:var(--mono);font-size:20px;font-weight:600;color:var(--gold-l);margin-bottom:6px}
+.tools-hero-sub{font-size:13px;color:var(--text2)}
+.tool-card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);padding:28px;margin-bottom:24px;position:relative;overflow:hidden}
+.tool-card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.tool-card.tc-gold::after{background:linear-gradient(90deg,var(--gold),transparent)}
+.tool-card.tc-green::after{background:linear-gradient(90deg,var(--green),transparent)}
+.tool-card.tc-blue::after{background:linear-gradient(90deg,var(--blue),transparent)}
+.tool-card.tc-red::after{background:linear-gradient(90deg,var(--red),transparent)}
+.tool-card-title{font-family:var(--mono);font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px;display:flex;align-items:center;gap:10px}
+.tool-card-sub{font-size:12px;color:var(--text2);margin-bottom:20px;line-height:1.6}
+.tool-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;align-items:flex-end}
+.tool-field{display:flex;flex-direction:column;gap:6px;flex:1;min-width:120px}
+.tool-field label{font-family:var(--mono);font-size:9px;color:var(--text2);letter-spacing:0.12em;text-transform:uppercase}
+.tool-field input,.tool-field select{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r-sm);color:var(--text);font-family:var(--mono);font-size:13px;padding:10px 13px;outline:none;transition:border-color 0.15s;width:100%}
+.tool-field input:focus,.tool-field select:focus{border-color:var(--gold-b);box-shadow:0 0 0 3px var(--gold-g)}
+.tool-calc-btn{padding:10px 20px;border-radius:var(--r-sm);border:1px solid var(--gold-b);background:var(--gold-g);color:var(--gold-l);font-family:var(--mono);font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s;letter-spacing:0.06em;white-space:nowrap;align-self:flex-end}
+.tool-calc-btn:hover{background:rgba(212,168,67,0.18)}
+.tool-result{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r-sm);padding:16px 20px;margin-top:4px;display:none}
+.tool-result.show{display:block}
+.tool-result-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+.tool-result-item{text-align:center}
+.tool-result-label{font-family:var(--mono);font-size:9px;color:var(--text2);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px}
+.tool-result-val{font-family:var(--mono);font-size:20px;font-weight:600}
+.tool-result-sub{font-size:11px;color:var(--text2);margin-top:3px;font-family:var(--mono)}
+.tool-divider{border:none;border-top:1px solid var(--b1);margin:20px 0}
+.tool-tip{background:var(--s2);border-left:3px solid var(--gold);border-radius:0 6px 6px 0;padding:10px 14px;font-size:12px;color:var(--text2);line-height:1.7;margin-top:14px}
+.tool-tip strong{color:var(--gold-l)}
+
+/* Payout tracker specific */
+.payout-days-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:16px}
+.pday{background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:12px 6px;text-align:center;cursor:pointer;transition:all 0.15s;position:relative;user-select:none}
+.pday:hover{border-color:var(--b2)}
+.pday.win{background:var(--green-g);border-color:var(--green-b)}
+.pday.lose{background:var(--red-g);border-color:var(--red-b)}
+.pday-num{font-family:var(--mono);font-size:10px;color:var(--text2);margin-bottom:6px}
+.pday-icon{font-size:18px}
+.pday-pnl{font-family:var(--mono);font-size:10px;font-weight:600;margin-top:4px}
+.pday-input-wrap{display:none;position:fixed;z-index:200;background:var(--s1);border:1px solid var(--b2);border-radius:8px;padding:12px;min-width:160px;box-shadow:0 8px 32px rgba(0,0,0,0.5)}
+.pday-input-wrap.open{display:block}
+.pday-input-wrap input{background:var(--s2);border:1px solid var(--b1);border-radius:5px;color:var(--text);font-family:var(--mono);font-size:14px;padding:8px 10px;outline:none;width:100%;margin-bottom:8px}
+.pday-input-wrap input:focus{border-color:var(--gold-b)}
+.pday-btns{display:flex;gap:6px}
+.pday-save{flex:1;padding:7px;border-radius:5px;border:1px solid var(--green-b);background:var(--green-g);color:var(--green);font-family:var(--mono);font-size:11px;cursor:pointer;font-weight:600}
+.pday-save:hover{background:rgba(46,216,136,0.2)}
+.pday-clear{padding:7px 10px;border-radius:5px;border:1px solid var(--b2);background:var(--s2);color:var(--text2);font-family:var(--mono);font-size:11px;cursor:pointer}
+.pday-clear:hover{border-color:var(--red-b);color:var(--red)}
+.payout-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px}
+.payout-sum-stat{background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:12px;text-align:center}
+.payout-sum-label{font-family:var(--mono);font-size:9px;color:var(--text2);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px}
+.payout-sum-val{font-family:var(--mono);font-size:18px;font-weight:600}
+.payout-ready{background:var(--green-g);border:1px solid var(--green-b);border-radius:8px;padding:14px 18px;text-align:center;font-family:var(--mono);font-size:13px;font-weight:600;color:var(--green);display:none}
+.payout-ready.show{display:block}
+.payout-month-select{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.month-btn{padding:7px 14px;border-radius:6px;border:1px solid var(--b1);background:var(--s2);color:var(--text2);font-family:var(--mono);font-size:11px;cursor:pointer;transition:all 0.15s}
+.month-btn:hover{border-color:var(--b2);color:var(--text)}
+.month-btn.active{border-color:var(--gold-b);background:var(--gold-g);color:var(--gold-l)}
+
+/* ══ NOTE PAGE ══ */
+.note-wrap{max-width:920px;margin:0 auto;padding:28px 20px 60px}
+.note-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+.note-header-left h1{font-family:var(--mono);font-size:18px;font-weight:600;color:var(--gold-l);margin-bottom:4px}
+.note-header-left p{font-size:12px;color:var(--text2)}
+.note-actions{display:flex;gap:8px;flex-wrap:wrap}
+.note-btn{padding:8px 16px;border-radius:var(--r-sm);border:1px solid var(--b2);background:var(--s2);color:var(--text2);font-family:var(--mono);font-size:11px;cursor:pointer;transition:all 0.15s;letter-spacing:0.05em}
+.note-btn:hover{border-color:var(--gold-b);color:var(--gold-l)}
+.note-btn.primary{border-color:var(--gold-b);background:var(--gold-g);color:var(--gold-l)}
+.note-btn.danger{border-color:var(--red-b);background:var(--red-g);color:var(--red)}
+.note-sidebar{display:grid;grid-template-columns:220px 1fr;gap:16px;align-items:start}
+@media(max-width:640px){.note-sidebar{grid-template-columns:1fr}}
+.note-list-card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);overflow:hidden;position:sticky;top:72px}
+.note-list-header{padding:12px 16px;border-bottom:1px solid var(--b1);font-family:var(--mono);font-size:9px;color:var(--text2);letter-spacing:0.12em;text-transform:uppercase;display:flex;align-items:center;justify-content:space-between}
+.note-list-add{background:var(--gold-g);border:1px solid var(--gold-b);color:var(--gold-l);border-radius:5px;padding:3px 10px;font-family:var(--mono);font-size:11px;cursor:pointer}
+.note-list-items{max-height:calc(100vh - 200px);overflow-y:auto}
+.note-list-item{padding:12px 16px;cursor:pointer;border-bottom:1px solid var(--b1);transition:background 0.1s;position:relative}
+.note-list-item:last-child{border-bottom:none}
+.note-list-item:hover{background:var(--s2)}
+.note-list-item.active{background:var(--gold-g);border-left:2px solid var(--gold)}
+.note-item-title{font-family:var(--mono);font-size:12px;font-weight:500;color:var(--text);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px}
+.note-list-item.active .note-item-title{color:var(--gold-l)}
+.note-item-meta{font-family:var(--mono);font-size:9px;color:var(--text3);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.note-item-tag{padding:1px 6px;border-radius:3px;font-size:9px;font-family:var(--mono)}
+.note-item-del{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text3);cursor:pointer;font-size:11px;padding:4px 6px;border-radius:4px;opacity:0;transition:all 0.15s}
+.note-list-item:hover .note-item-del{opacity:1}
+.note-item-del:hover{color:var(--red);background:var(--red-g)}
+.note-editor-card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);overflow:hidden}
+.note-editor-top{padding:12px 16px;border-bottom:1px solid var(--b1);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.note-title-input{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-family:var(--mono);font-size:15px;font-weight:600;min-width:0}
+.note-title-input::placeholder{color:var(--text3)}
+.note-tag-select{background:var(--s2);border:1px solid var(--b1);border-radius:5px;color:var(--text2);font-family:var(--mono);font-size:10px;padding:4px 8px;outline:none;cursor:pointer}
+.note-toolbar{padding:6px 12px;border-bottom:1px solid var(--b1);display:flex;gap:3px;flex-wrap:wrap;background:var(--s2);align-items:center}
+.note-tool{background:none;border:1px solid transparent;border-radius:4px;color:var(--text2);font-family:var(--mono);font-size:11px;padding:4px 7px;cursor:pointer;transition:all 0.12s;white-space:nowrap}
+.note-tool:hover{border-color:var(--b2);color:var(--text);background:var(--s1)}
+.note-tool.undo-active{border-color:var(--blue-b);color:var(--blue)}
+.note-tool-sep{width:1px;background:var(--b1);margin:2px 3px;align-self:stretch}
+.note-color-swatch{width:18px;height:18px;border-radius:3px;border:1px solid var(--b2);cursor:pointer;padding:0;transition:transform 0.1s;flex-shrink:0;display:inline-block}
+.note-color-swatch:hover{transform:scale(1.25)}
+.note-body{position:relative}
+.note-textarea{width:100%;min-height:500px;background:transparent;border:none;outline:none;color:var(--text);font-family:var(--sans);font-size:14px;line-height:1.9;padding:20px;resize:none;display:block}
+.note-preview{min-height:500px;padding:20px;font-size:14px;line-height:1.9;color:var(--text);display:none;overflow-y:auto}
+.note-preview.show{display:block}
+.note-preview h1{font-family:var(--mono);font-size:18px;font-weight:600;color:var(--gold-l);margin:20px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--b1)}
+.note-preview h2{font-family:var(--mono);font-size:15px;font-weight:600;color:var(--text);margin:16px 0 8px}
+.note-preview h3{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--text2);margin:12px 0 6px}
+.note-preview p{margin-bottom:10px}
+.note-preview ul,.note-preview ol{margin:8px 0 10px 20px}
+.note-preview li{margin-bottom:4px}
+.note-preview code{background:var(--s2);border:1px solid var(--b1);border-radius:4px;padding:1px 6px;font-family:var(--mono);font-size:12px;color:var(--gold-l)}
+.note-preview pre{background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:14px;font-family:var(--mono);font-size:12px;margin:10px 0;overflow-x:auto}
+.note-preview blockquote{border-left:3px solid var(--gold);padding:8px 16px;margin:10px 0;background:var(--gold-g);border-radius:0 6px 6px 0;color:var(--text2)}
+.note-preview strong{color:var(--green);font-weight:600}
+.note-preview em{color:var(--gold-l);font-style:italic}
+.note-preview hr{border:none;border-top:1px solid var(--b1);margin:16px 0}
+.note-preview img{max-width:100%;border-radius:8px;border:1px solid var(--b1);margin:8px 0;display:block}
+.note-preview mark.hl-y{background:rgba(240,201,106,0.3);color:var(--gold-l);border-radius:2px;padding:0 3px}
+.note-preview mark.hl-g{background:rgba(46,216,136,0.2);color:var(--green);border-radius:2px;padding:0 3px}
+.note-preview mark.hl-r{background:rgba(240,90,74,0.2);color:var(--red);border-radius:2px;padding:0 3px}
+.note-preview mark.hl-b{background:rgba(79,142,247,0.2);color:var(--blue);border-radius:2px;padding:0 3px}
+.note-preview .fc-g{color:var(--gold-l)}
+.note-preview .fc-n{color:var(--green)}
+.note-preview .fc-r{color:var(--red)}
+.note-preview .fc-b{color:var(--blue)}
+.note-preview .fc-p{color:var(--purple)}
+.note-footer{padding:10px 20px;border-top:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--text3)}
+.note-img-bar{padding:8px 12px;border-top:1px solid var(--b1);background:var(--s2);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.note-img-bar label{font-family:var(--mono);font-size:9px;color:var(--text2);letter-spacing:0.08em;text-transform:uppercase}
+.note-img-add-btn{padding:4px 12px;border-radius:5px;border:1px dashed var(--b2);background:none;color:var(--text2);font-family:var(--mono);font-size:10px;cursor:pointer;transition:all 0.15s}
+.note-img-add-btn:hover{border-color:var(--gold-b);color:var(--gold-l)}
+.note-img-thumb{width:36px;height:36px;object-fit:cover;border-radius:5px;border:1px solid var(--b1);cursor:pointer;transition:transform 0.12s}
+.note-img-thumb:hover{transform:scale(1.1)}
+.note-empty{text-align:center;padding:60px 20px;color:var(--text2)}
+.note-empty p:first-child{font-size:36px;margin-bottom:12px}
+.note-empty p{font-family:var(--mono);font-size:12px;margin-bottom:6px}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-dot"></div>
+    <div>
+      <div class="brand-text">ชีวิตคือกราฟ</div>
+      <div class="brand-sub">LIFE IS A CHART · WAY TO PROFIT</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="switchPage('trade',this)">📊 Trade</button>
+      <button class="nav-tab" onclick="switchPage('disc',this)">🧘 วินัย</button>
+      <button class="nav-tab" onclick="switchPage('game',this)">🎨 รอ TP/SL</button>
+      <button class="nav-tab" onclick="switchPage('wish',this)">🛒 ซื้ออะไรดี</button>
+      <button class="nav-tab" onclick="switchPage('tools',this)">⚙️ เครื่องมือ</button>
+      <button class="nav-tab" onclick="switchPage('note',this)">📒 Note</button>
+    </div>
+    <div class="topbar-pnl" id="top-pnl">$0</div>
+  </div>
+</div>
+<!-- PAGE: TRADE -->
+<div class="page-wrap active" id="page-trade"><div class="page">
+  <div class="section-eyebrow">Equity Curve</div>
+  <div class="chart-card"><canvas id="equity-chart"></canvas></div>
+  <div class="section-eyebrow">Performance Summary</div>
+  <div class="stats-grid">
+    <div class="stat"><div class="stat-label">Net P&amp;L</div><div class="stat-val" id="s-pnl">$0</div><div class="stat-sub">รวมทั้งหมด</div></div>
+    <div class="stat"><div class="stat-label">Win Rate</div><div class="stat-val neutral" id="s-wr">—</div><div class="stat-sub">TP / ทั้งหมด</div></div>
+    <div class="stat"><div class="stat-label">Avg Win</div><div class="stat-val pos" id="s-avgw">—</div><div class="stat-sub">เฉลี่ยต่อ TP</div></div>
+    <div class="stat"><div class="stat-label">Avg Loss</div><div class="stat-val neg" id="s-avgl">—</div><div class="stat-sub">เฉลี่ยต่อ SL</div></div>
+    <div class="stat"><div class="stat-label">Best Trade</div><div class="stat-val pos" id="s-best">—</div><div class="stat-sub">กำไรสูงสุด</div></div>
+    <div class="stat"><div class="stat-label">Worst Trade</div><div class="stat-val neg" id="s-worst">—</div><div class="stat-sub">ขาดทุนสูงสุด</div></div>
+    <div class="stat"><div class="stat-label">Total Trades</div><div class="stat-val gold" id="s-total">0</div><div class="stat-sub">trade ทั้งหมด</div></div>
+    <div class="stat"><div class="stat-label">Profit Factor</div><div class="stat-val neutral" id="s-pf">—</div><div class="stat-sub">Gross Win / Loss</div></div>
+    <div class="stat"><div class="stat-label">Total Lots</div><div class="stat-val gold" id="s-lots">—</div><div class="stat-sub">รวมทุกไม้</div></div>
+    <div class="stat"><div class="stat-label">จุดรวม</div><div class="stat-val neutral" id="s-pts">—</div><div class="stat-sub">สะสมทั้งหมด</div></div>
+    <div class="stat"><div class="stat-label">จุด / Trade</div><div class="stat-val neutral" id="s-avgpts">—</div><div class="stat-sub">เฉลี่ยต่อ trade</div></div>
+    <div class="stat"><div class="stat-label">จุด TP</div><div class="stat-val pos" id="s-ptsw">—</div><div class="stat-sub">เฉลี่ยเมื่อชนะ</div></div>
+    <div class="stat"><div class="stat-label">จุด SL</div><div class="stat-val neg" id="s-ptsl">—</div><div class="stat-sub">เฉลี่ยเมื่อแพ้</div></div>
+  </div>
+  <div class="section-eyebrow">Session Performance</div>
+  <div class="heatmap">
+    <div class="heat-cell" id="h-morning"><span class="heat-icon">🌅</span><div class="heat-name">เช้า</div><div class="heat-time">06:00–12:59</div><div class="heat-val neutral" id="hv-morning">$0</div><div class="heat-trades" id="ht-morning">0 trade</div></div>
+    <div class="heat-cell" id="h-afternoon"><span class="heat-icon">☀️</span><div class="heat-name">บ่าย</div><div class="heat-time">13:00–16:59</div><div class="heat-val neutral" id="hv-afternoon">$0</div><div class="heat-trades" id="ht-afternoon">0 trade</div></div>
+    <div class="heat-cell" id="h-evening"><span class="heat-icon">🌆</span><div class="heat-name">เย็น</div><div class="heat-time">17:00–22:59</div><div class="heat-val neutral" id="hv-evening">$0</div><div class="heat-trades" id="ht-evening">0 trade</div></div>
+    <div class="heat-cell" id="h-night"><span class="heat-icon">🌙</span><div class="heat-name">ดึก</div><div class="heat-time">23:00–05:59</div><div class="heat-val neutral" id="hv-night">$0</div><div class="heat-trades" id="ht-night">0 trade</div></div>
+  </div>
+  <div class="section-eyebrow">บันทึก Trade</div>
+  <div class="form-card">
+    <div class="form-row"><div class="field"><label>วันที่</label><input type="date" id="f-date"></div><div class="field"><label>เวลาเทรด</label><input type="time" id="f-time"></div></div>
+    <div class="form-row"><div class="field"><label>ทิศทาง</label><div class="dir-big-group"><button class="dir-big-btn buy" id="dir-buy" onclick="selectDirection('BUY')">▲ BUY</button><button class="dir-big-btn sell" id="dir-sell" onclick="selectDirection('SELL')">▼ SELL</button></div></div></div>
+    <div class="form-row"><div class="field"><label>สินค้าที่เทรด</label><div class="inst-group" id="inst-group"><button class="inst-btn" onclick="selectInstrument('XAUUSD',this)">🥇 ทองคำ</button><button class="inst-btn" onclick="selectInstrument('NAS100',this)">📊 NASDAQ</button><button class="inst-btn" onclick="selectInstrument('EURUSD',this)">💶 EUR/USD</button><button class="inst-btn" onclick="selectInstrument('BTCUSD',this)">₿ BTC</button><button class="inst-btn" id="inst-other-btn" onclick="toggleOtherInstrument(this)">✏️ อื่นๆ</button></div><input type="text" id="f-instrument-other" placeholder="พิมพ์ชื่อสินค้า เช่น GBPUSD" style="display:none;margin-top:10px"></div></div>
+    <div class="form-row"><div class="field"><label>เทคนิคที่ใช้</label><div class="btn-group"><div class="tog-btn tech" id="tb-mtrader" onclick="selectTechnique('MTRADER')">MTRADER</div><div class="tog-btn tech" id="tb-ict" onclick="selectTechnique('ICT / SMC')">ICT / SMC</div><div class="tog-btn tech" id="tb-oi" onclick="selectTechnique('OI / Intraday')">OI / Intraday</div><div class="tog-btn tech" id="tb-bare" onclick="selectTechnique('กราฟเปล่า')">กราฟเปล่า</div></div><div class="ict-notice" id="ict-notice">ℹ️ ICT / SMC: เลือก TP / SL ด้วยตัวเอง</div></div></div>
+    <div class="sub-panel" id="mtrader-panel"><div class="sub-section"><div class="sub-label">เทคนิค</div><div class="sub-btns" id="mt-technique"><div class="sub-btn" onclick="toggleMT('technique','MTRADER + ICT',this)">MTRADER + ICT</div><div class="sub-btn" onclick="toggleMT('technique','MTRADER Arrow',this)">MTRADER Arrow</div><div class="sub-btn" onclick="toggleMT('technique','MTRADER Only',this)">MTRADER Only</div></div></div><div class="sub-section"><div class="sub-label">TF</div><div class="sub-btns" id="mt-tf"><div class="sub-btn" onclick="toggleMT('tf','10s',this)">10s</div><div class="sub-btn" onclick="toggleMT('tf','15s',this)">15s</div><div class="sub-btn" onclick="toggleMT('tf','30s',this)">30s</div><div class="sub-btn" onclick="toggleMT('tf','1m',this)">1m</div><div class="sub-btn" onclick="toggleMT('tf','2m',this)">2m</div><div class="sub-btn" onclick="toggleMT('tf','3m',this)">3m</div><div class="sub-btn" onclick="toggleMT('tf','4m',this)">4m</div><div class="sub-btn" onclick="toggleMT('tf','5m',this)">5m</div></div></div></div>
+    <div class="sub-panel" id="bare-panel"><div class="sub-section"><div class="sub-label">ลักษณะกราฟ</div><div class="sub-btns" id="bare-shape"><div class="sub-btn" onclick="toggleBare('shape','เทรนขึ้น',this)">📈 เทรนขึ้น</div><div class="sub-btn" onclick="toggleBare('shape','เทรนลง',this)">📉 เทรนลง</div><div class="sub-btn" onclick="toggleBare('shape','โซนบน',this)">⬆ โซนบน</div><div class="sub-btn" onclick="toggleBare('shape','โซนล่าง',this)">⬇ โซนล่าง</div><div class="sub-btn" onclick="toggleBare('shape','ไซเวย์',this)">↔ ไซเวย์</div><div class="sub-btn" onclick="toggleBare('shape','ไม่ชัด',this)">❓ ไม่ชัด</div></div></div><div class="sub-section"><div class="sub-label">ท่าเทรด</div><div class="sub-btns" id="bare-setup"><div class="sub-btn" onclick="toggleBare('setup','ในกรอบ',this)">📦 ในกรอบ</div><div class="sub-btn" onclick="toggleBare('setup','ตามเจ้า',this)">👁 ตามเจ้า</div><div class="sub-btn" onclick="toggleBare('setup','ท่าไม้ตาย',this)">⚡ ท่าไม้ตาย</div><div class="sub-btn" onclick="toggleBare('setup','แนวเด้ง',this)">🔄 แนวเด้ง</div></div></div><div class="sub-section"><div class="sub-label">TF</div><div class="sub-btns" id="bare-tf"><div class="sub-btn" onclick="toggleBare('tf','M1',this)">M1</div><div class="sub-btn" onclick="toggleBare('tf','M5',this)">M5</div><div class="sub-btn" onclick="toggleBare('tf','M15',this)">M15</div><div class="sub-btn" onclick="toggleBare('tf','M30',this)">M30</div><div class="sub-btn" onclick="toggleBare('tf','H1',this)">H1</div><div class="sub-btn" onclick="toggleBare('tf','H4',this)">H4</div></div></div></div>
+    <hr class="form-divider">
+    <div class="form-row"><div class="field"><label>กำไร / ขาดทุน ($)</label><input type="number" id="f-pnl" placeholder="เช่น 150 หรือ -80" id="f-pnl-inp"></div><div class="field"><label>ผลลัพธ์ <span id="out-auto-hint" style="color:var(--text3);font-size:9px"></span></label><div class="btn-group" style="height:100%;align-items:stretch"><div class="tog-btn tp" id="out-tp" onclick="selectOutcome('TP')" style="display:flex;align-items:center;justify-content:center">▲ TP</div><div class="tog-btn sl" id="out-sl" onclick="selectOutcome('SL')" style="display:flex;align-items:center;justify-content:center">▼ SL</div></div></div></div>
+    <div class="form-row"><div class="field"><label>จำนวนจุด / Points (ไม่บังคับ)</label><input type="number" id="f-points" placeholder="เช่น 25.5 หรือ -12" step="0.1"></div></div>
+    <div class="form-row"><div class="field"><label>Lots / Contracts</label><div style="display:flex;gap:8px"><div class="tog-btn unit" id="ub-lot" onclick="selectUnit('Lot')" style="flex:0 0 auto;padding:10px 18px">Lot</div><div class="tog-btn unit" id="ub-contract" onclick="selectUnit('Contract')" style="flex:0 0 auto;padding:10px 18px">Contract</div><input type="number" id="f-lots" placeholder="จำนวน" min="0" step="0.01" style="flex:1"></div></div></div>
+    <hr class="form-divider">
+    <div class="form-row"><div class="field"><label>หมายเหตุ / บันทึกชีวิต</label><textarea id="f-note" placeholder="วันนี้ใจนิ่ง trend ชัด…"></textarea></div></div>
+    <div class="form-row" style="margin-bottom:20px"><div class="field"><label>รูปภาพ Chart (ไม่บังคับ)</label><label class="img-upload-label"><span id="img-upload-txt">📎 แนบรูปภาพ</span><input type="file" id="f-image" accept="image/*" onchange="handleImageUpload(event)"></label><div class="img-preview-wrap" id="img-preview-wrap"><img id="img-preview" src="" alt="preview"><button class="img-clear-btn" onclick="clearImage()">✕ ลบรูป</button></div></div></div>
+    <button class="add-btn" onclick="addTrade()">+ บันทึก Trade</button>
+  </div>
+  <div class="toolbar"><div class="section-eyebrow" style="margin-bottom:0;flex:1">Trade Log</div><div class="toolbar-left"><button class="export-btn" onclick="exportCSV()">⬇ Export CSV</button></div></div>
+  <div class="table-card"><div class="table-scroll"><table><thead><tr><th>วันที่</th><th>เวลา</th><th>Session</th><th>สินค้า</th><th>ทิศ</th><th>เทคนิค</th><th>ผล</th><th>P&amp;L</th><th>Points</th><th>Lots</th><th>รูป</th><th>หมายเหตุ</th><th></th></tr></thead><tbody id="trade-body"><tr><td colspan="13"><div class="empty-state"><div class="ei">📈</div><p>ยังไม่มี trade · ชีวิตเริ่มต้นที่ trade แรก</p></div></td></tr></tbody></table></div></div>
+</div></div>
+
+<!-- PAGE: DISCIPLINE -->
+<div class="page-wrap" id="page-disc"><div class="page">
+  <div class="disc-hero"><div class="disc-hero-title">🧘 วินัยของนักเทรด</div><div class="disc-hero-sub">ตลาดไม่ได้ฆ่าเทรดเดอร์ — ตัวเองต่างหากที่ทำ<br>กฎทุกข้อเขียนด้วยเลือดและเงินของคนอื่น เรียนรู้จากมัน</div></div>
+  <div class="section-eyebrow">กฎเหล็ก 9 ข้อ</div>
+  <div class="rules-grid">
+    <div class="rule-card"><div class="rule-num">Rule 01</div><div class="rule-title">เทรดตาม Plan เท่านั้น</div><div class="rule-body">ถ้าไม่มี setup ที่ชัดก่อนเปิดออเดอร์ — อย่าเปิด ตลาดเปิดพรุ่งนี้อีก แต่เงินที่เสียไปอาจไม่กลับมา</div><div class="rule-tag tag-process">กระบวนการ</div></div>
+    <div class="rule-card"><div class="rule-num">Rule 02</div><div class="rule-title">ไม่เกิน 3 Trade ต่อวัน</div><div class="rule-body">Trade ที่ 4 มักเกิดจากอีโก้หรือความอยากเอาคืน ไม่ใช่จาก setup ที่ดี</div><div class="rule-tag tag-mindset">Mindset</div></div>
+    <div class="rule-card"><div class="rule-num">Rule 03</div><div class="rule-title">ตั้ง SL ก่อนเปิด ห้ามขยับออก</div><div class="rule-body">การขยับ SL ออกคือการเปลี่ยน plan กลางคัน เท่ากับบอกว่าตัวเองไม่เชื่อ plan</div><div class="rule-tag tag-risk">ความเสี่ยง</div></div>
+    <div class="rule-card"><div class="rule-num">Rule 04</div><div class="rule-title">Risk ต่อ Trade ไม่เกิน 1–2%</div><div class="rule-body">คนที่รวยจาก trading ไม่ใช่คนที่กล้า risk สูง แต่คือคนที่อยู่รอดได้นานพอที่ edge จะ compound</div><div class="rule-tag tag-risk">ความเสี่ยง</div></div>
+    <div class="rule-card"><div class="rule-num">Rule 05</div><div class="rule-title">Revenge Trade = ห้าม</div><div class="rule-body">SL แล้วรู้สึกอยากเปิดใหม่ทันที? นั่นไม่ใช่โอกาส — นั่นคืออารมณ์</div><div class="rule-tag tag-mindset">Mindset</div></div>
+    <div class="rule-card"><div class="rule-num">Rule 06</div><div class="rule-title">บันทึกทุก Trade</div><div class="rule-body">ถ้าไม่รู้ว่าตัวเองแพ้เพราะอะไร จะแก้ไขไม่ได้ Trade log คือกระจกที่ตลาดบังคับให้มองตัวเอง</div><div class="rule-tag tag-process">กระบวนการ</div></div>
+    <div class="rule-card"><div class="rule-num">Rule 07</div><div class="rule-title">รู้จักเวลาของตัวเอง</div><div class="rule-body">ดู Session Performance ถ้าช่วงดึกแพ้ทุกครั้ง ก็หยุดเทรดดึก มันคือ edge ไม่ใช่ความอ่อนแอ</div><div class="rule-tag tag-timing">Timing</div></div>
+    <div class="rule-card"><div class="rule-num">Rule 08</div><div class="rule-title">ปิดคอมเมื่อถึง Daily Loss Limit</div><div class="rule-body">กำหนดไว้ล่วงหน้าว่าเสียเท่าไหร่แล้วหยุด วันที่ worst loss มักมาจากการไม่ยอมหยุด</div><div class="rule-tag tag-risk">ความเสี่ยง</div></div>
+    <div class="rule-card"><div class="rule-num">Rule 09</div><div class="rule-title">ทบทวนสัปดาห์ละครั้ง</div><div class="rule-body">ดู trade log ย้อนหลัง 7 วัน มี pattern ซ้ำๆ ไหม? ความก้าวหน้ามาจากการเรียนรู้ ไม่ใช่เทรดเยอะ</div><div class="rule-tag tag-process">กระบวนการ</div></div>
+  </div>
+  <div class="section-eyebrow">Pre-Trade Checklist</div>
+  <div class="checklist-card">
+    <div class="checklist-title">✓ เช็คก่อนกด BUY / SELL</div>
+    <div id="checklist-items">
+      <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">มี setup ชัดเจนก่อนเปิด</div><div class="check-desc">เห็น pattern / zone / signal ที่ตรงกับ plan</div></div></div>
+      <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">ตั้ง SL ไว้แล้ว และยอมรับได้</div><div class="check-desc">รู้ว่าจะเสียเท่าไหร่ถ้า trade นี้ผิด</div></div></div>
+      <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">R:R อย่างน้อย 1:1.5</div><div class="check-desc">กำไรที่คาดว่าจะได้ต้องมากกว่าความเสี่ยง</div></div></div>
+      <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">วันนี้ยังไม่ถึง daily loss limit</div><div class="check-desc">ถ้าเสียไปมากแล้ว — หยุดก่อน อย่าฝืน</div></div></div>
+      <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">อารมณ์ปกติ ไม่ได้เทรดเพื่อเอาคืน</div><div class="check-desc">เปิด trade นี้เพราะ setup หรือเพราะรู้สึก?</div></div></div>
+      <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">วันนี้ยังไม่ถึง 3 trade</div><div class="check-desc">ถ้าเทรดไปแล้ว 3 ครั้ง พิจารณาหยุดก่อน</div></div></div>
+      <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">เข้าใจ direction ของตลาด</div><div class="check-desc">trend ขึ้น ลง หรือ sideways?</div></div></div>
+    </div>
+    <div style="margin-top:16px"><button class="reset-check-btn" onclick="resetChecklist()">↺ Reset checklist</button></div>
+  </div>
+  <div class="section-eyebrow">แรงบันดาลใจ</div>
+  <div class="quote-card"><div class="quote-text">"ไม่มีใครสอนให้คุณอดทนได้ ยกเว้นตลาดเอง และค่าเรียนก็จ่ายด้วยเงินจริงๆ"</div><div class="quote-src">— ชีวิตคือกราฟ</div></div>
+  <div class="quote-card" style="border-left-color:var(--blue)"><div class="quote-text">"The goal of a successful trader is to make the best trades. Money is secondary."</div><div class="quote-src">— Alexander Elder</div></div>
+  <div class="quote-card" style="border-left-color:var(--purple)"><div class="quote-text">"วันที่คุณหยุดเทรดเพราะไม่มี setup — นั่นคือวันที่คุณเทรดได้ดีที่สุด"</div><div class="quote-src">— ชีวิตคือกราฟ</div></div>
+</div></div>
+<!-- PAGE: GAME -->
+<div class="page-wrap" id="page-game"><div class="game-wrap">
+  <div class="game-hero"><div class="game-title">🧪 เทสีในแก้ว</div><div class="game-sub">เทสีจากบนลงล่าง ให้แต่ละแก้วมีสีเดียวกัน — เทได้เฉพาะสีเดียวกันที่อยู่ด้านบนสุดของปลายทาง</div></div>
+  <div class="timer-bar"><span class="timer-label">⏱ Timer</span><div class="timer-val" id="timer-val">00:00</div><div class="timer-track"><div class="timer-fill" id="timer-fill" style="width:0%"></div></div><div class="timer-btns"><button class="timer-btn" onclick="setTimer(5)">5m</button><button class="timer-btn" onclick="setTimer(10)">10m</button><button class="timer-btn" onclick="setTimer(15)">15m</button><button class="timer-btn" onclick="toggleTimer()" id="timer-toggle-btn">▶ Start</button></div></div>
+  <div class="game-topbar"><div class="game-stat"><div class="game-stat-label">ด่าน</div><div class="game-stat-val" id="g-level">1</div></div><div class="game-stat"><div class="game-stat-label">เคลื่อนไหว</div><div class="game-stat-val" id="g-moves">0</div></div><div class="game-stat"><div class="game-stat-label">สำเร็จ</div><div class="game-stat-val" id="g-done">0 / 0</div></div><div class="game-btns"><button class="game-btn" onclick="undoMove()">↩ Undo</button><button class="game-btn" onclick="showHint()">💡 Hint</button><button class="game-btn primary" onclick="nextLevel()">ด่านถัดไป ▶</button><button class="game-btn danger" onclick="restartLevel()">↺ Restart</button></div></div>
+  <div class="difficulty-row"><div class="diff-btn active" id="diff-easy" onclick="setDifficulty('easy',this)">🟢 ง่าย (4 สี)</div><div class="diff-btn" id="diff-medium" onclick="setDifficulty('medium',this)">🟡 กลาง (6 สี)</div><div class="diff-btn" id="diff-hard" onclick="setDifficulty('hard',this)">🔴 ยาก (8 สี)</div></div>
+  <div id="tubes-area"><div class="win-overlay" id="win-overlay"><div class="win-emoji">🎉</div><div class="win-title">ชนะแล้ว!</div><div class="win-sub" id="win-sub">ทำได้ใน 0 ครั้ง</div><button class="win-btn" onclick="onWinNextLevel()">เปิดช่องซ่อน &amp; ด่านถัดไป →</button></div></div>
+  <div class="surprise-section">
+    <div class="surprise-title">🎁 ช่องซ่อนเซอร์ไพรซ์</div>
+    <div class="surprise-sub">ชนะแต่ละด่านเพื่อเปิดช่อง 1 ชิ้น — ทายว่ารูปทั้งหมดคืออะไร?</div>
+    <div class="reveal-progress"><div class="reveal-bar-track"><div class="reveal-bar-fill" id="reveal-bar" style="width:0%"></div></div><div class="reveal-bar-label" id="reveal-label">0 / 9 ช่อง</div></div>
+    <div class="reveal-grid" id="reveal-grid"></div>
+    <div class="guess-section">
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text2);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px">ทายว่าภาพนี้คืออะไร?</div>
+      <div class="guess-input-wrap"><input class="guess-input" id="guess-input" placeholder="เช่น ช้าง, แมว, บ้าน…" onkeydown="if(event.key==='Enter')submitGuess()"><button class="guess-btn" onclick="submitGuess()">ทาย</button><button class="guess-btn" style="background:var(--s2);border-color:var(--b1);color:var(--text2)" onclick="revealAnswer()">เฉลย</button></div>
+      <div class="guess-result" id="guess-result"></div>
+      <div class="guess-history" id="guess-history"></div>
+      <button onclick="nextPuzzle()" style="margin-top:12px;padding:7px 16px;border-radius:6px;border:1px solid var(--b2);background:var(--s2);color:var(--text2);font-family:var(--mono);font-size:10px;cursor:pointer;letter-spacing:0.06em">🔄 ภาพถัดไป</button>
+    </div>
+  </div>
+  <div class="section-eyebrow" style="margin-top:24px">ระหว่างรอ — ระลึกไว้</div>
+  <div class="mindset-cards">
+    <div class="mindset-card"><div class="mindset-emoji">🧘</div><div class="mindset-title">ใจนิ่ง = เงินเข้า</div><div class="mindset-body">trade ที่ดีที่สุดคือ trade ที่เปิดแล้วไม่ต้องจ้องจอ</div></div>
+    <div class="mindset-card"><div class="mindset-emoji">⏳</div><div class="mindset-title">ตลาดต้องการเวลา</div><div class="mindset-body">ราคาไม่เคลื่อนตาม timeline ของเรา แต่ตาม plan ของ Smart Money</div></div>
+    <div class="mindset-card"><div class="mindset-emoji">🎯</div><div class="mindset-title">ห้ามขยับ SL</div><div class="mindset-body">ถ้าขยับ SL ออก นั่นหมายความว่า plan ตั้งแต่แรกผิด ไม่ใช่ตลาดผิด</div></div>
+    <div class="mindset-card"><div class="mindset-emoji">💰</div><div class="mindset-title">TP คือปลายทาง</div><div class="mindset-body">ถ้า setup ถูกต้อง TP จะมาหาเราเอง ไม่ต้องรีบปิดกำไรก่อนถึงเป้า</div></div>
+    <div class="mindset-card"><div class="mindset-emoji">🌱</div><div class="mindset-title">ความยั่งยืนคือเป้าหมาย</div><div class="mindset-body">$150 x 3 วัน ดีกว่า $500 วันเดียวแล้วหยุด</div></div>
+    <div class="mindset-card"><div class="mindset-emoji">🧪</div><div class="mindset-title">เหมือนเกมนี้</div><div class="mindset-body">การเทรดคือการจัดระเบียบ — ทุก move ต้องมี logic ไม่ใช่ความรู้สึก</div></div>
+  </div>
+</div></div>
+
+<!-- PAGE: WISH LIST -->
+<div class="page-wrap" id="page-wish"><div class="wish-wrap">
+  <div class="wish-hero">
+    <div class="wish-hero-top">
+      <div><div class="wish-hero-title">🛒 กำไรของฉัน ซื้ออะไรได้บ้าง?</div><div class="wish-hero-sub">ใส่ของที่อยากได้ — แล้วดูว่ากำไรจาก trade ใกล้ถึงเป้าแค่ไหน</div></div>
+      <div class="wish-pnl-box"><div class="wish-pnl-label">Net P&amp;L (กำไรสะสม)</div><div class="wish-pnl-val pos" id="wish-pnl-usd">$0</div><div class="wish-pnl-thb" id="wish-pnl-thb">≈ ฿0</div></div>
+    </div>
+    <div><div class="wish-progress-label">ความคืบหน้าเป้าหมายรวม</div><div class="wish-progress-wrap"><div class="wish-progress-track"><div class="wish-progress-fill" id="wish-total-bar" style="width:0%;background:var(--gold)"></div></div><div class="wish-progress-pct gold" id="wish-total-pct">0%</div></div></div>
+  </div>
+  <div class="wish-exchange-bar"><span class="wish-ex-label">อัตราแลกเปลี่ยน</span><span class="wish-ex-hint">$1 USD =</span><input class="wish-ex-input" type="number" id="wish-rate" value="33" min="1" step="0.1" id="wish-rate-inp"><span class="wish-ex-hint">บาท</span><span class="wish-ex-hint" style="margin-left:8px;color:var(--text3)">· ปรับได้ตามอัตราจริง</span></div>
+  <div class="wish-summary-grid">
+    <div class="wish-sum-stat"><div class="wish-sum-label">ของที่อยากได้</div><div class="wish-sum-val gold" id="ws-total">0 ชิ้น</div></div>
+    <div class="wish-sum-stat"><div class="wish-sum-label">ซื้อแล้ว</div><div class="wish-sum-val pos" id="ws-bought">0 ชิ้น</div></div>
+    <div class="wish-sum-stat"><div class="wish-sum-label">ยังขาดอยู่</div><div class="wish-sum-val neg" id="ws-gap">$0</div></div>
+    <div class="wish-sum-stat"><div class="wish-sum-label">เป้าใหญ่ที่สุด</div><div class="wish-sum-val neutral" id="ws-biggest">—</div></div>
+    <div class="wish-sum-stat"><div class="wish-sum-label">ซื้อได้แล้ว</div><div class="wish-sum-val pos" id="ws-canafford">0 ชิ้น</div></div>
+    <div class="wish-sum-stat"><div class="wish-sum-label">รวมที่อยากได้</div><div class="wish-sum-val neutral" id="ws-sumtarget">$0</div></div>
+  </div>
+  <div class="section-eyebrow">เพิ่มของที่อยากซื้อ</div>
+  <div class="wish-add-card">
+    <div class="wish-form-row">
+      <div class="wish-field" style="flex:0 0 60px"><label>Emoji</label><input type="text" id="wf-emoji" placeholder="🛒" maxlength="4" style="text-align:center;font-size:20px;padding:7px"></div>
+      <div class="wish-field" style="flex:2"><label>ชื่อสิ่งของ</label><input type="text" id="wf-name" placeholder="เช่น MacBook Pro, รองเท้า Nike, ท่องเที่ยวโตเกียว"></div>
+      <div class="wish-field"><label>หมวดหมู่</label><select id="wf-cat"><option value="🎮 ของเล่น/แกดเจ็ต">🎮 ของเล่น/แกดเจ็ต</option><option value="👗 แฟชั่น/เสื้อผ้า">👗 แฟชั่น/เสื้อผ้า</option><option value="✈️ ท่องเที่ยว">✈️ ท่องเที่ยว</option><option value="🍽 อาหาร/ร้านอาหาร">🍽 อาหาร/ร้านอาหาร</option><option value="📱 เทคโนโลยี">📱 เทคโนโลยี</option><option value="🏋️ สุขภาพ/ฟิตเนส">🏋️ สุขภาพ/ฟิตเนส</option><option value="📚 การเรียนรู้">📚 การเรียนรู้/Course</option><option value="🏠 บ้าน/เฟอร์นิเจอร์">🏠 บ้าน/เฟอร์นิเจอร์</option><option value="💍 ของขวัญ/คนพิเศษ">💍 ของขวัญ/คนพิเศษ</option><option value="🎯 อื่นๆ">🎯 อื่นๆ</option></select></div>
+    </div>
+    <div class="wish-form-row">
+      <div class="wish-field"><label>ราคา (USD $)</label><input type="number" id="wf-price-usd" placeholder="เช่น 500" min="1" step="0.01" id="wf-price-usd-inp"></div>
+      <div class="wish-field"><label>ราคา (บาท ฿)</label><input type="number" id="wf-price-thb" placeholder="เช่น 16500" min="1" id="wf-price-thb-inp"></div>
+      <div class="wish-field"><label>ความสำคัญ</label><div class="priority-btns"><div class="priority-btn p1" id="wpri-high" onclick="selectWishPriority('high',this)">🔴 ต้องได้</div><div class="priority-btn p2 active" id="wpri-med" onclick="selectWishPriority('med',this)">🟡 อยากได้</div><div class="priority-btn p3" id="wpri-low" onclick="selectWishPriority('low',this)">🟢 ถ้าเหลือ</div></div></div>
+    </div>
+    <button class="wish-add-btn" onclick="addWishItem()">+ เพิ่มของที่อยากได้</button>
+  </div>
+  <div class="section-eyebrow">รายการของที่อยากได้</div>
+  <div class="wish-grid" id="wish-grid"><div class="wish-empty"><p>🛒</p><p>ยังไม่มีรายการ — เพิ่มของที่อยากได้ด้านบน</p></div></div>
+</div></div>
+
+<!-- PAGE: TOOLS -->
+<div class="page-wrap" id="page-tools"><div class="tools-wrap">
+  <div class="tools-hero"><div class="tools-hero-title">⚙️ เครื่องมือคำนวณ</div><div class="tools-hero-sub">วางแผนก่อนเทรด — ตัวเลขถูก ใจสงบ กำไรยั่งยืน</div></div>
+
+  <!-- 1: DAILY P&L TARGET -->
+  <div class="tool-card tc-gold">
+    <div class="tool-card-title">🗓 Daily P&amp;L Target</div>
+    <div class="tool-card-sub">ต้องทำกำไรวันละเท่าไหร่ถึงเป้าเดือน — ช่วยตั้ง expectation ก่อนเปิดทุกวัน</div>
+    <div class="tool-row">
+      <div class="tool-field"><label>เป้ากำไรเดือนนี้ ($)</label><input type="number" id="dp-monthly" placeholder="เช่น 3000" min="1"></div>
+      <div class="tool-field"><label>จำนวนวันที่เทรด</label><input type="number" id="dp-days" value="20" min="1" max="31"></div>
+      <div class="tool-field"><label>วันที่เทรดไปแล้ว</label><input type="number" id="dp-traded" value="0" min="0"></div>
+      <div class="tool-field"><label>กำไรสะสมแล้ว ($)</label><input type="number" id="dp-earned" value="0"></div>
+    </div>
+    <button class="tool-calc-btn" id="btn-dp-calc">คำนวณ</button>
+    <div class="tool-result" id="dp-result">
+      <div class="tool-result-grid">
+        <div class="tool-result-item"><div class="tool-result-label">เป้าต่อวัน (เดิม)</div><div class="tool-result-val gold" id="dp-r-orig">—</div><div class="tool-result-sub">เฉลี่ยจากเป้าเดือน</div></div>
+        <div class="tool-result-item"><div class="tool-result-label">ยังขาดอีก ($)</div><div class="tool-result-val neg" id="dp-r-remain">—</div><div class="tool-result-sub">เป้า − ที่ทำแล้ว</div></div>
+        <div class="tool-result-item"><div class="tool-result-label">วันที่เหลือ</div><div class="tool-result-val neutral" id="dp-r-dayleft">—</div><div class="tool-result-sub">วันที่ยังต้องเทรด</div></div>
+        <div class="tool-result-item"><div class="tool-result-label">ต้องทำต่อวัน ($)</div><div class="tool-result-val pos" id="dp-r-need">—</div><div class="tool-result-sub">ตั้งแต่นี้เป็นต้นไป</div></div>
+      </div>
+      <div id="dp-verdict" style="margin-top:12px;padding:10px 14px;border-radius:6px;font-family:var(--mono);font-size:12px;display:none"></div>
+    </div>
+    <div class="tool-tip">💡 Topstep $50K: Winning Day ต้อง ≥ <strong>$150</strong> · ต้อง <strong>5 Winning Days</strong> ถึงถอนได้ · วางเป้าวันละ <strong>$150–200</strong> แล้วหยุด</div>
+  </div>
+
+  <!-- 2: DRAWDOWN CALCULATOR -->
+  <div class="tool-card tc-red">
+    <div class="tool-card-title">📉 Drawdown Calculator</div>
+    <div class="tool-card-sub">เช็ค buffer ที่เหลือก่อน trailing drawdown โดน — รู้ก่อนจะได้ไม่เสียพอร์ต</div>
+    <div class="tool-row">
+      <div class="tool-field"><label>Account Balance ปัจจุบัน ($)</label><input type="number" id="dd-balance" placeholder="เช่น 51500" min="1"></div>
+      <div class="tool-field"><label>Trailing Drawdown Threshold ($)</label><input type="number" id="dd-threshold" placeholder="เช่น 47000" min="1"></div>
+      <div class="tool-field"><label>ประเภทบัญชี</label>
+        <select id="dd-type">
+          <option value="trailing">Trailing Drawdown (เคลื่อนตาม equity)</option>
+          <option value="static">Static Drawdown (คงที่)</option>
+        </select>
+      </div>
+    </div>
+    <button class="tool-calc-btn" id="btn-dd-calc">คำนวณ</button>
+    <div class="tool-result" id="dd-result">
+      <div class="tool-result-grid">
+        <div class="tool-result-item"><div class="tool-result-label">Buffer เหลือ ($)</div><div class="tool-result-val" id="dd-r-buffer">—</div><div class="tool-result-sub">ก่อนโดน drawdown</div></div>
+        <div class="tool-result-item"><div class="tool-result-label">Buffer (%)</div><div class="tool-result-val" id="dd-r-pct">—</div><div class="tool-result-sub">ของ balance ปัจจุบัน</div></div>
+        <div class="tool-result-item"><div class="tool-result-label">Max Loss ต่อ Trade</div><div class="tool-result-val neg" id="dd-r-max">—</div><div class="tool-result-sub">ถ้า risk 10% ของ buffer</div></div>
+        <div class="tool-result-item"><div class="tool-result-label">SL ได้สูงสุด ($)</div><div class="tool-result-val neg" id="dd-r-sl">—</div><div class="tool-result-sub">ถ้า risk 2% ต่อ trade</div></div>
+      </div>
+      <div id="dd-verdict" style="margin-top:12px;padding:10px 14px;border-radius:6px;font-family:var(--mono);font-size:12px;display:none"></div>
+    </div>
+    <div class="tool-tip">💡 Topstep $50K: Trailing Drawdown = <strong>$47,000</strong> · ถ้า balance $52,000 → buffer = <strong>$5,000</strong> · Daily loss limit <strong>$1,000</strong></div>
+  </div>
+
+  <!-- 3: PROFIT WITHDRAWAL PLANNER -->
+  <div class="tool-card tc-green">
+    <div class="tool-card-title">💵 Profit Withdrawal Planner</div>
+    <div class="tool-card-sub">วางแผนถอนเงินแต่ละเดือนให้ยั่งยืน — balance เติบโต ไม่หดตัว</div>
+    <div class="tool-row">
+      <div class="tool-field"><label>กำไรเดือนนี้ ($)</label><input type="number" id="pw-profit" placeholder="เช่น 1500" min="1"></div>
+      <div class="tool-field"><label>Profit Split (%)</label><input type="number" id="pw-split" value="90" min="1" max="100"></div>
+      <div class="tool-field"><label>% ที่อยากถอน</label><input type="number" id="pw-withdraw-pct" value="50" min="1" max="100"></div>
+      <div class="tool-field"><label>USD/THB</label><input type="number" id="pw-rate" value="33" min="1" step="0.1"></div>
+    </div>
+    <button class="tool-calc-btn" id="btn-pw-calc">คำนวณ</button>
+    <div class="tool-result" id="pw-result">
+      <div class="tool-result-grid">
+        <div class="tool-result-item"><div class="tool-result-label">ได้รับจริง (90%)</div><div class="tool-result-val pos" id="pw-r-net">—</div><div class="tool-result-sub">หลัง profit split</div></div>
+        <div class="tool-result-item"><div class="tool-result-label">ถอนได้ ($)</div><div class="tool-result-val gold" id="pw-r-withdraw">—</div><div class="tool-result-sub">50% ของที่ได้รับ</div></div>
+        <div class="tool-result-item"><div class="tool-result-label">ถอนได้ (฿)</div><div class="tool-result-val gold" id="pw-r-thb">—</div><div class="tool-result-sub">แปลงเป็นบาท</div></div>
+        <div class="tool-result-item"><div class="tool-result-label">เหลือใน account ($)</div><div class="tool-result-val pos" id="pw-r-keep">—</div><div class="tool-result-sub">compound ต่อไป</div></div>
+      </div>
+      <div id="pw-breakdown" style="margin-top:12px;background:var(--s1);border:1px solid var(--b1);border-radius:8px;padding:14px;font-family:var(--mono);font-size:11px;color:var(--text2);line-height:2"></div>
+    </div>
+    <div class="tool-tip">💡 Topstep: ถอนได้สูงสุด <strong>50% ของ balance</strong> ต่อครั้ง · ถอน 50% แล้วทิ้ง 50% ไว้ compound = <strong>ยั่งยืนที่สุด</strong></div>
+  </div>
+
+  <!-- 4: CONTRACT SIZE CALCULATOR -->
+  <div class="tool-card tc-blue">
+    <div class="tool-card-title">🔢 Contract Size Calculator</div>
+    <div class="tool-card-sub">กราฟวิ่ง X จุด อยากได้กำไร Y ดอล → ต้องใช้กี่ contracts? คำนวณย้อนกลับจากเป้ากำไร</div>
+    <div class="tool-row">
+      <div class="tool-field">
+        <label>สินค้า</label>
+        <select id="cs-product">
+          <option value="xauusd_mini">🥇 Gold MGC (Mini) — $1 / point</option>
+          <option value="xauusd_full">🥇 Gold GC (Full) — $10 / point</option>
+          <option value="nas_micro">📊 NQ Micro (MNQ) — $0.20 / point</option>
+          <option value="nas_full">📊 NQ Full — $20 / point</option>
+          <option value="sp_micro">📈 ES Micro (MES) — $1.25 / point (0.25pt=1tick)</option>
+          <option value="sp_full">📈 ES Full — $50 / point</option>
+          <option value="custom">✏️ กำหนดเอง</option>
+        </select>
+      </div>
+      <div class="tool-field" id="cs-custom-wrap" style="display:none">
+        <label>มูลค่าต่อ point ($)</label>
+        <input type="number" id="cs-custom-val" placeholder="เช่น 1" min="0.01" step="0.01">
+      </div>
+      <div class="tool-field">
+        <label>กราฟวิ่งกี่จุด (points)</label>
+        <input type="number" id="cs-points" placeholder="เช่น 1000" min="0.1" step="0.1">
+      </div>
+      <div class="tool-field">
+        <label>เป้ากำไร ($)</label>
+        <input type="number" id="cs-target" placeholder="เช่น 200" min="1">
+      </div>
+    </div>
+    <button class="tool-calc-btn" id="btn-cs-calc">คำนวณ</button>
+    <div class="tool-result" id="cs-result">
+      <div class="tool-result-grid">
+        <div class="tool-result-item"><div class="tool-result-label">Contracts ที่ต้องใช้</div><div class="tool-result-val gold" id="cs-r-contracts">—</div><div class="tool-result-sub">ถ้าวิ่งครบทุกจุด</div></div>
+        <div class="tool-result-item"><div class="tool-result-label">มูลค่าต่อ point</div><div class="tool-result-val neutral" id="cs-r-ppv">—</div><div class="tool-result-sub">ต่อ 1 contract</div></div>
+        <div class="tool-result-item"><div class="tool-result-label">กำไรถ้าได้ครบ</div><div class="tool-result-val pos" id="cs-r-profit">—</div><div class="tool-result-sub">ตาม contracts ที่แนะนำ</div></div>
+        <div class="tool-result-item"><div class="tool-result-label">กำไรถ้าได้ครึ่งทาง</div><div class="tool-result-val neutral" id="cs-r-half">—</div><div class="tool-result-sub">50% ของ target points</div></div>
+      </div>
+      <div id="cs-table" style="margin-top:14px;background:var(--s1);border:1px solid var(--b1);border-radius:8px;overflow:hidden">
+        <div style="padding:10px 14px;font-family:var(--mono);font-size:9px;color:var(--text2);letter-spacing:0.1em;text-transform:uppercase;border-bottom:1px solid var(--b1)">ตารางกำไร ถ้าใช้จำนวน contracts ต่างกัน</div>
+        <div id="cs-table-body" style="padding:4px 0"></div>
+      </div>
+    </div>
+    <div class="tool-tip">💡 ตัวอย่าง: Gold MGC วิ่ง <strong>1,000 จุด</strong> อยากได้ <strong>$200</strong> → ต้องใช้ <strong>0.2 contract</strong> (แต่ต่ำสุด 1) · ถ้าใช้ 1 contract ได้ <strong>$1,000</strong></div>
+  </div>
+
+</div></div>
+
+<!-- PAGE: NOTE -->
+<div class="page-wrap" id="page-note"><div class="note-wrap">
+  <div class="note-header">
+    <div class="note-header-left">
+      <h1>📒 Note — ความรู้ ICT / SMC</h1>
+      <p>บันทึกความรู้ที่เรียนมา · รองรับ Markdown · บันทึกอัตโนมัติใน browser</p>
+    </div>
+    <div class="note-actions">
+      <button class="note-btn" id="note-btn-preview">👁 Preview</button>
+      <button class="note-btn primary" id="note-btn-new">+ Note ใหม่</button>
+    </div>
+  </div>
+  <div class="note-sidebar">
+    <!-- NOTE LIST -->
+    <div class="note-list-card">
+      <div class="note-list-header">
+        <span>รายการ Note</span>
+        <button class="note-list-add" id="note-list-add-btn">+</button>
+      </div>
+      <div class="note-list-items" id="note-list-items">
+        <div class="note-empty" style="padding:24px 16px"><p>📝</p><p style="font-size:11px">ยังไม่มี Note</p></div>
+      </div>
+    </div>
+    <!-- EDITOR -->
+    <div class="note-editor-card">
+      <div id="note-editor-wrap">
+        <div class="note-empty" style="min-height:300px"><p>📒</p><p>เลือก Note จากรายการ หรือกด + เพื่อสร้างใหม่</p></div>
+      </div>
+    </div>
+  </div>
+</div></div>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox(event)"><button class="lightbox-close" onclick="closeLightbox()">✕ ปิด</button><img id="lightbox-img" src="" alt=""></div>
+<script>
+/* ══ TRADE JOURNAL ══ */
+let trades=JSON.parse(localStorage.getItem('lic_trades')||'[]');
+let selectedOutcome='',selectedTechnique='',selectedUnit='',selectedDirection='',selectedInstrument='';
+let manualOutcome=false,currentImageData=null;
+let bareState={shape:'',setup:'',tf:''},mtState={technique:'',tf:''};
+
+document.getElementById('f-date').valueAsDate=new Date();
+const nowT=new Date();
+document.getElementById('f-time').value=nowT.getHours().toString().padStart(2,'0')+':'+nowT.getMinutes().toString().padStart(2,'0');
+function switchPage(p,tabEl){
+  document.querySelectorAll('.page-wrap').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(el=>el.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');tabEl.classList.add('active');
+  if(p==='game')setTimeout(initGame,50);
+  if(p==='wish')renderWishPage();
+  if(p==='tools'&&window._initPT)window._initPT();
+  if(p==='note'&&window._initNote)window._initNote();
+}
+window.switchPage=switchPage;
+function selectInstrument(v,el){selectedInstrument=v;document.querySelectorAll('#inst-group .inst-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');document.getElementById('f-instrument-other').style.display='none';}
+function toggleOtherInstrument(el){document.querySelectorAll('#inst-group .inst-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');selectedInstrument='__other__';const inp=document.getElementById('f-instrument-other');inp.style.display='block';inp.focus();}
+function selectDirection(d){selectedDirection=d;document.getElementById('dir-buy').classList.remove('active');document.getElementById('dir-sell').classList.remove('active');document.getElementById(d==='BUY'?'dir-buy':'dir-sell').classList.add('active');}
+function isICT(){return selectedTechnique==='ICT / SMC';}
+function selectTechnique(t){
+  selectedTechnique=t;
+  const idMap={'MTRADER':'tb-mtrader','ICT / SMC':'tb-ict','OI / Intraday':'tb-oi','กราฟเปล่า':'tb-bare'};
+  document.querySelectorAll('#tb-mtrader,#tb-ict,#tb-oi,#tb-bare').forEach(b=>b.classList.remove('active'));
+  document.getElementById(idMap[t]).classList.add('active');
+  const bareP=document.getElementById('bare-panel'),mtP=document.getElementById('mtrader-panel');
+  if(t==='กราฟเปล่า'){bareP.classList.add('show');mtP.classList.remove('show');mtState={technique:'',tf:''};resetMTButtons();}
+  else if(t==='MTRADER'){mtP.classList.add('show');bareP.classList.remove('show');bareState={shape:'',setup:'',tf:''};resetBareButtons();}
+  else{bareP.classList.remove('show');mtP.classList.remove('show');bareState={shape:'',setup:'',tf:''};resetBareButtons();mtState={technique:'',tf:''};resetMTButtons();}
+  const notice=document.getElementById('ict-notice'),hint=document.getElementById('out-auto-hint');
+  if(t==='ICT / SMC'){notice.classList.add('show');manualOutcome=false;selectedOutcome='';document.getElementById('out-tp').classList.remove('active');document.getElementById('out-sl').classList.remove('active');hint.textContent='(เลือกเอง)';}
+  else{notice.classList.remove('show');hint.textContent='(อัตโนมัติ)';manualOutcome=false;selectedOutcome='';applyAutoOutcome(document.getElementById('f-pnl').value);}
+}
+function selectOutcome(o){
+  if(!isICT()&&selectedOutcome===o&&manualOutcome){manualOutcome=false;selectedOutcome='';document.getElementById('out-tp').classList.remove('active');document.getElementById('out-sl').classList.remove('active');applyAutoOutcome(document.getElementById('f-pnl').value);return;}
+  selectedOutcome=o;manualOutcome=true;document.getElementById('out-tp').classList.remove('active');document.getElementById('out-sl').classList.remove('active');document.getElementById(o==='TP'?'out-tp':'out-sl').classList.add('active');
+}
+function onPnlInput(val){if(isICT()||manualOutcome)return;applyAutoOutcome(val);}
+function applyAutoOutcome(val){if(isICT())return;if(val===''||val===null||isNaN(parseFloat(val))){document.getElementById('out-tp').classList.remove('active');document.getElementById('out-sl').classList.remove('active');selectedOutcome='';return;}const v=parseFloat(val);document.getElementById('out-tp').classList.toggle('active',v>=0);document.getElementById('out-sl').classList.toggle('active',v<0);selectedOutcome=v>=0?'TP':'SL';}
+function selectUnit(u){selectedUnit=u;document.getElementById('ub-lot').classList.remove('active');document.getElementById('ub-contract').classList.remove('active');document.getElementById(u==='Lot'?'ub-lot':'ub-contract').classList.add('active');}
+function toggleMT(group,val,el){el.parentElement.querySelectorAll('.sub-btn').forEach(b=>b.classList.remove('active'));if(mtState[group]===val){mtState[group]='';}else{mtState[group]=val;el.classList.add('active');}}
+function resetMTButtons(){document.querySelectorAll('#mt-technique .sub-btn,#mt-tf .sub-btn').forEach(b=>b.classList.remove('active'));}
+function toggleBare(group,val,el){el.parentElement.querySelectorAll('.sub-btn').forEach(b=>b.classList.remove('active'));if(bareState[group]===val){bareState[group]='';}else{bareState[group]=val;el.classList.add('active');}}
+function resetBareButtons(){document.querySelectorAll('#bare-shape .sub-btn,#bare-setup .sub-btn,#bare-tf .sub-btn').forEach(b=>b.classList.remove('active'));}
+function handleImageUpload(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=ev=>{currentImageData=ev.target.result;document.getElementById('img-preview').src=currentImageData;document.getElementById('img-preview-wrap').style.display='block';document.getElementById('img-upload-txt').textContent='✓ '+file.name;};r.readAsDataURL(file);}
+function clearImage(){currentImageData=null;document.getElementById('f-image').value='';document.getElementById('img-preview-wrap').style.display='none';document.getElementById('img-upload-txt').textContent='📎 แนบรูปภาพ';}
+function openLightbox(src){document.getElementById('lightbox-img').src=src;document.getElementById('lightbox').classList.add('open');}
+function closeLightbox(e){if(!e||e.target===document.getElementById('lightbox')||e.currentTarget.classList.contains('lightbox-close'))document.getElementById('lightbox').classList.remove('open');}
+function getSession(t){if(!t)return'unknown';const[h]=t.split(':').map(Number);if(h>=6&&h<=12)return'morning';if(h>=13&&h<=16)return'afternoon';if(h>=17&&h<=22)return'evening';return'night';}
+function sessionLabel(s){return{morning:'เช้า',afternoon:'บ่าย',evening:'เย็น',night:'ดึก',unknown:'?'}[s]||s;}
+function sessionBadgeClass(s){return{morning:'badge-morning',afternoon:'badge-afternoon',evening:'badge-evening',night:'badge-night'}[s]||'';}
+function addTrade(){
+  const date=document.getElementById('f-date').value,time=document.getElementById('f-time').value,pnl=document.getElementById('f-pnl').value,lots=document.getElementById('f-lots').value,points=document.getElementById('f-points').value,note=document.getElementById('f-note').value;
+  let instrument=selectedInstrument==='__other__'?(document.getElementById('f-instrument-other').value.trim()||'อื่นๆ'):selectedInstrument;
+  if(!date||!time||!pnl||!selectedTechnique){alert('กรุณากรอก: วันที่, เวลา, เทคนิค และ P&L');return;}
+  const pnlVal=parseFloat(pnl);let finalOutcome=selectedOutcome;
+  if(!finalOutcome){if(isICT()){alert('กรุณาเลือก TP หรือ SL (ICT/SMC)');return;}finalOutcome=pnlVal>=0?'TP':'SL';}
+  trades.unshift({id:Date.now(),date,time,session:getSession(time),instrument:instrument||'',direction:selectedDirection||'',technique:selectedTechnique,bareInfo:selectedTechnique==='กราฟเปล่า'?{...bareState}:null,mtInfo:selectedTechnique==='MTRADER'?{...mtState}:null,pnl:pnlVal,points:points!==''&&!isNaN(parseFloat(points))?parseFloat(points):null,lots:lots?parseFloat(lots):null,lotsUnit:lots?(selectedUnit||'Lot'):null,outcome:finalOutcome,note,image:currentImageData||null});
+  save();render();resetForm();
+}
+function deleteTrade(id){trades=trades.filter(t=>t.id!==id);save();render();}
+function save(){localStorage.setItem('lic_trades',JSON.stringify(trades));}
+function resetForm(){
+  document.getElementById('f-pnl').value='';document.getElementById('f-points').value='';document.getElementById('f-lots').value='';document.getElementById('f-note').value='';
+  selectedOutcome='';selectedTechnique='';selectedUnit='';selectedDirection='';selectedInstrument='';manualOutcome=false;
+  bareState={shape:'',setup:'',tf:''};mtState={technique:'',tf:''};
+  ['out-tp','out-sl','dir-buy','dir-sell','ub-lot','ub-contract'].forEach(id=>document.getElementById(id).classList.remove('active'));
+  document.querySelectorAll('#inst-group .inst-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('#tb-mtrader,#tb-ict,#tb-oi,#tb-bare').forEach(b=>b.classList.remove('active'));
+  document.getElementById('bare-panel').classList.remove('show');document.getElementById('mtrader-panel').classList.remove('show');document.getElementById('ict-notice').classList.remove('show');
+  document.getElementById('f-instrument-other').style.display='none';document.getElementById('f-instrument-other').value='';document.getElementById('out-auto-hint').textContent='';
+  resetBareButtons();resetMTButtons();clearImage();
+}
+function exportCSV(){
+  if(!trades.length){alert('ยังไม่มีข้อมูล');return;}
+  const header=['ID','วันที่','เวลา','Session','สินค้า','ทิศทาง','เทคนิค','Sub','TF','ผลลัพธ์','P&L','Points','Lots','Unit','หมายเหตุ'];
+  const rows=trades.map(t=>{let sub='',tf='';if(t.bareInfo){sub=[t.bareInfo.shape,t.bareInfo.setup].filter(Boolean).join('/');tf=t.bareInfo.tf||'';}if(t.mtInfo){sub=t.mtInfo.technique||'';tf=t.mtInfo.tf||'';}return[t.id,t.date,t.time,sessionLabel(t.session),t.instrument||'',t.direction||'',t.technique,sub,tf,t.outcome,t.pnl,t.points!=null?t.points:'',t.lots||'',t.lotsUnit||'','"'+(t.note||'').replace(/"/g,"''")+'"'].join(',');});
+  const csv=[header.join(','),...rows].join('\n');const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='lic_trades_'+new Date().toISOString().slice(0,10)+'.csv';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+}
+function render(){renderTable();renderStats();renderHeatmap();renderChart();}
+function renderTable(){
+  const tbody=document.getElementById('trade-body');
+  if(!trades.length){tbody.innerHTML='<tr><td colspan="13"><div class="empty-state"><div class="ei">📈</div><p>ยังไม่มี trade · ชีวิตเริ่มต้นที่ trade แรก</p></div></td></tr>';return;}
+  tbody.innerHTML=trades.map(t=>{
+    const pnlStr=(t.pnl>=0?'+':'')+'$'+t.pnl.toFixed(0),pnlCls=t.pnl>=0?'pos':'neg';
+    const outB=t.outcome==='TP'?'<span class="badge badge-tp">▲ TP</span>':'<span class="badge badge-sl">▼ SL</span>';
+    const sessB=`<span class="badge ${sessionBadgeClass(t.session)}">${sessionLabel(t.session)}</span>`;
+    const instB=t.instrument?`<span class="badge badge-instrument">${t.instrument}</span>`:'<span style="color:var(--text3)">—</span>';
+    const dirB=t.direction==='BUY'?'<span class="badge badge-buy">▲ BUY</span>':t.direction==='SELL'?'<span class="badge badge-sell">▼ SELL</span>':'<span style="color:var(--text3)">—</span>';
+    let techCell=`<span style="color:var(--gold-l);font-size:11px">${t.technique}</span>`;
+    const tags=t.bareInfo?[t.bareInfo.shape,t.bareInfo.setup,t.bareInfo.tf].filter(Boolean):t.mtInfo?[t.mtInfo.technique,t.mtInfo.tf].filter(Boolean):[];
+    if(tags.length)techCell+='<br><span style="font-size:9px;color:var(--text2)">'+tags.join(' · ')+'</span>';
+    const lotsCell=t.lots!=null?`<span style="color:var(--text2)">${t.lots%1===0?t.lots:t.lots.toFixed(2)}<span style="color:var(--text3);font-size:9px;margin-left:2px">${t.lotsUnit||''}</span></span>`:'<span style="color:var(--text3)">—</span>';
+    let ptsCell='<span style="color:var(--text3)">—</span>';
+    if(t.points!=null){const ps=(t.points>=0?'+':'')+t.points.toFixed(1);ptsCell=`<span class="badge ${t.points>=0?'badge-pts-pos':'badge-pts-neg'}">${ps}</span>`;}
+    const imgCell=t.image?`<button class="thumb-btn" data-id="${t.id}">🖼</button>`:'<span style="color:var(--text3)">—</span>';
+    return`<tr><td>${t.date}</td><td>${t.time}</td><td>${sessB}</td><td>${instB}</td><td>${dirB}</td><td>${techCell}</td><td>${outB}</td><td class="${pnlCls}" style="font-weight:600">${pnlStr}</td><td>${ptsCell}</td><td>${lotsCell}</td><td>${imgCell}</td><td class="note-td">${t.note||'—'}</td><td><button class="del-btn" onclick="deleteTrade(${t.id})">✕</button></td></tr>`;
+  }).join('');
+  document.querySelectorAll('.thumb-btn[data-id]').forEach(btn=>{const id=parseInt(btn.dataset.id);const trade=trades.find(t=>t.id===id);if(trade&&trade.image)btn.onclick=()=>openLightbox(trade.image);});
+}
+function renderStats(){
+  const total=trades.reduce((s,t)=>s+t.pnl,0);const wins=trades.filter(t=>t.pnl>0);const losses=trades.filter(t=>t.pnl<=0);
+  const wr=trades.length?(wins.length/trades.length*100).toFixed(0)+'%':'—';
+  const avgW=wins.length?'$'+(wins.reduce((s,t)=>s+t.pnl,0)/wins.length).toFixed(0):'—';
+  const avgL=losses.length?'-$'+Math.abs(losses.reduce((s,t)=>s+t.pnl,0)/losses.length).toFixed(0):'—';
+  const best=wins.length?'+$'+Math.max(...wins.map(t=>t.pnl)).toFixed(0):'—';
+  const worst=losses.length?'-$'+Math.abs(Math.min(...losses.map(t=>t.pnl))).toFixed(0):'—';
+  const gw=wins.reduce((s,t)=>s+t.pnl,0),gl=Math.abs(losses.reduce((s,t)=>s+t.pnl,0));
+  const pf=gl>0?(gw/gl).toFixed(2):wins.length?'∞':'—';
+  const pnlEl=document.getElementById('s-pnl');pnlEl.textContent=(total>=0?'+':'')+'$'+total.toFixed(0);pnlEl.className='stat-val '+(total>=0?'pos':'neg');
+  document.getElementById('s-wr').textContent=wr;document.getElementById('s-avgw').textContent=avgW;document.getElementById('s-avgl').textContent=avgL;document.getElementById('s-best').textContent=best;document.getElementById('s-worst').textContent=worst;document.getElementById('s-total').textContent=trades.length;document.getElementById('s-pf').textContent=pf;
+  const tl=trades.reduce((s,t)=>s+(t.lots||0),0);document.getElementById('s-lots').textContent=tl>0?tl%1===0?tl:tl.toFixed(2):'—';
+  const ptsAll=trades.filter(t=>t.points!=null);
+  if(ptsAll.length){const ps=ptsAll.reduce((s,t)=>s+t.points,0);const pw=ptsAll.filter(t=>t.points>0);const pl=ptsAll.filter(t=>t.points<=0);const avg=ps/ptsAll.length;const sP=document.getElementById('s-pts');sP.textContent=(ps>=0?'+':'')+ps.toFixed(1);sP.className='stat-val '+(ps>=0?'pos':'neg');const sA=document.getElementById('s-avgpts');sA.textContent=(avg>=0?'+':'')+avg.toFixed(1);sA.className='stat-val '+(avg>=0?'pos':'neg');document.getElementById('s-ptsw').textContent=pw.length?'+'+(pw.reduce((s,t)=>s+t.points,0)/pw.length).toFixed(1):'—';document.getElementById('s-ptsl').textContent=pl.length?(pl.reduce((s,t)=>s+t.points,0)/pl.length).toFixed(1):'—';}
+  else{['s-pts','s-avgpts','s-ptsw','s-ptsl'].forEach(id=>{const el=document.getElementById(id);el.textContent='—';el.className='stat-val neutral';});}
+  const tp=document.getElementById('top-pnl');tp.textContent=(total>=0?'+':'')+'$'+total.toFixed(0);tp.className='topbar-pnl '+(total>=0?'pos':'neg');
+}
+function renderHeatmap(){['morning','afternoon','evening','night'].forEach(s=>{const st=trades.filter(t=>t.session===s);const sum=st.reduce((a,t)=>a+t.pnl,0);const el=document.getElementById('hv-'+s);el.textContent=(sum>=0?'+':'')+'$'+sum.toFixed(0);el.className='heat-val '+(sum>0?'pos':sum<0?'neg':'neutral');document.getElementById('ht-'+s).textContent=st.length+' trade';const cell=document.getElementById('h-'+s);cell.style.borderColor=sum>0?'rgba(46,216,136,0.25)':sum<0?'rgba(240,90,74,0.25)':'var(--b1)';cell.style.background=sum>0?'var(--green-g)':sum<0?'var(--red-g)':'var(--s1)';});}
+function renderChart(){
+  const canvas=document.getElementById('equity-chart');const ctx=canvas.getContext('2d');const dpr=window.devicePixelRatio||1;
+  canvas.width=canvas.offsetWidth*dpr;canvas.height=180*dpr;ctx.scale(dpr,dpr);
+  const W=canvas.offsetWidth,H=180;ctx.clearRect(0,0,W,H);
+  if(trades.length<2){ctx.fillStyle='rgba(136,152,172,0.4)';ctx.font='12px IBM Plex Mono';ctx.textAlign='center';ctx.fillText('เพิ่ม trade เพื่อดู equity curve',W/2,H/2);return;}
+  const sorted=[...trades].reverse();const equity=[0];sorted.forEach(t=>equity.push(equity[equity.length-1]+t.pnl));
+  const minE=Math.min(...equity),maxE=Math.max(...equity),range=maxE-minE||1;
+  const pad={top:24,bottom:20,left:16,right:16};const W2=W-pad.left-pad.right,H2=H-pad.top-pad.bottom;
+  const pts=equity.map((v,i)=>({x:pad.left+(i/(equity.length-1))*W2,y:pad.top+H2-((v-minE)/range)*H2}));
+  const zeroY=pad.top+H2-((0-minE)/range)*H2;
+  ctx.strokeStyle='rgba(255,255,255,0.06)';ctx.lineWidth=1;ctx.setLineDash([4,6]);ctx.beginPath();ctx.moveTo(pad.left,zeroY);ctx.lineTo(W-pad.right,zeroY);ctx.stroke();ctx.setLineDash([]);
+  const last=equity[equity.length-1];const sc=last>=0?'#2ed888':'#f05a4a',fc=last>=0?'rgba(46,216,136,0.08)':'rgba(240,90,74,0.08)';
+  ctx.beginPath();ctx.moveTo(pts[0].x,zeroY);pts.forEach(p=>ctx.lineTo(p.x,p.y));ctx.lineTo(pts[pts.length-1].x,zeroY);ctx.closePath();ctx.fillStyle=fc;ctx.fill();
+  ctx.beginPath();pts.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));ctx.strokeStyle=sc;ctx.lineWidth=1.5;ctx.lineJoin='round';ctx.lineCap='round';ctx.stroke();
+  pts.forEach((p,i)=>{if(i===0)return;const t=sorted[i-1];ctx.beginPath();ctx.arc(p.x,p.y,2.5,0,Math.PI*2);ctx.fillStyle=t.pnl>=0?'#2ed888':'#f05a4a';ctx.fill();});
+  const lp=pts[pts.length-1];ctx.fillStyle=sc;ctx.font='500 11px IBM Plex Mono';ctx.textAlign='right';ctx.fillText((last>=0?'+':'')+'$'+last.toFixed(0),W-pad.right,lp.y-7);
+}
+function toggleCheck(el){el.classList.toggle('checked');el.querySelector('.check-box').textContent=el.classList.contains('checked')?'✓':'';}
+function resetChecklist(){document.querySelectorAll('.check-item').forEach(el=>{el.classList.remove('checked');el.querySelector('.check-box').textContent='';});}
+window.addEventListener('resize',renderChart);
+render();
+/* ══ WATER SORT GAME ══ */
+const TUBE_COLORS=[{key:'rose',bg:'#c97474'},{key:'peach',bg:'#c49b78'},{key:'sand',bg:'#b8a87a'},{key:'sage',bg:'#7aab8a'},{key:'teal',bg:'#5f9ea8'},{key:'sky',bg:'#7090c8'},{key:'lavender',bg:'#9b82c8'},{key:'mauve',bg:'#a87898'},{key:'slate',bg:'#8098b0'},{key:'moss',bg:'#7a9870'}];
+const TUBE_CAPACITY=4;
+let gameState=null,selectedTube=-1,moveHistory=[],currentLevel=1,totalMoves=0,difficulty='easy',gameInitialized=false;
+function initGame(){if(!gameInitialized){gameInitialized=true;initRevealGrid();}startLevel();}
+function setDifficulty(d,el){difficulty=d;document.querySelectorAll('.diff-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');startLevel();}
+function colorCount(){return{easy:4,medium:6,hard:8}[difficulty]||4;}
+function startLevel(){
+  selectedTube=-1;moveHistory=[];totalMoves=0;
+  document.getElementById('g-moves').textContent='0';document.getElementById('win-overlay').classList.remove('show');
+  const n=colorCount();let all=[];
+  for(let c=0;c<n;c++)for(let i=0;i<TUBE_CAPACITY;i++)all.push(c);
+  for(let i=all.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[all[i],all[j]]=[all[j],all[i]];}
+  gameState=[];
+  for(let t=0;t<n;t++)gameState.push(all.slice(t*TUBE_CAPACITY,(t+1)*TUBE_CAPACITY));
+  for(let e=0;e<2;e++)gameState.push([]);
+  updateDoneCount();renderTubes();
+}
+function updateDoneCount(){const n=colorCount();const done=gameState.filter(tube=>tube.length===TUBE_CAPACITY&&tube.every(c=>c===tube[0])).length;document.getElementById('g-done').textContent=done+' / '+n;}
+function renderTubes(){
+  const area=document.getElementById('tubes-area'),overlay=document.getElementById('win-overlay');
+  area.innerHTML='';area.appendChild(overlay);
+  gameState.forEach((tube,ti)=>{
+    const wrap=document.createElement('div');wrap.className='tube-wrap';wrap.onclick=()=>onTubeClick(ti);
+    const label=document.createElement('div');label.className='tube-label';label.textContent=String.fromCharCode(65+ti);wrap.appendChild(label);
+    const tubeEl=document.createElement('div');tubeEl.className='tube'+(ti===selectedTube?' selected':'');
+    if(tube.length===TUBE_CAPACITY&&tube.every(c=>c===tube[0]))tubeEl.classList.add('complete');
+    const layerH=184/TUBE_CAPACITY,emptyCount=TUBE_CAPACITY-tube.length;
+    for(let e=0;e<emptyCount;e++){const empty=document.createElement('div');empty.className='tube-layer';empty.style.height=layerH+'px';empty.style.background='transparent';tubeEl.appendChild(empty);}
+    for(let li=tube.length-1;li>=0;li--){const col=TUBE_COLORS[tube[li]%TUBE_COLORS.length];const layer=document.createElement('div');layer.className='tube-layer';layer.style.height=layerH+'px';layer.style.background=col.bg;if(li===tube.length-1)layer.classList.add('new-pour');tubeEl.appendChild(layer);}
+    wrap.appendChild(tubeEl);area.appendChild(wrap);
+  });
+}
+function getTopColor(tube){return tube.length>0?tube[tube.length-1]:-1;}
+function countTopSameColor(tube){if(tube.length===0)return 0;const top=tube[tube.length-1];let count=0;for(let i=tube.length-1;i>=0;i--){if(tube[i]===top)count++;else break;}return count;}
+function onTubeClick(ti){
+  if(selectedTube===-1){if(gameState[ti].length===0)return;selectedTube=ti;renderTubes();return;}
+  if(selectedTube===ti){selectedTube=-1;renderTubes();return;}
+  const src=gameState[selectedTube],dst=gameState[ti];
+  if(dst.length>=TUBE_CAPACITY){selectedTube=ti;renderTubes();return;}
+  const srcTop=getTopColor(src),dstTop=getTopColor(dst);
+  if(dst.length>0&&dstTop!==srcTop){selectedTube=ti;renderTubes();return;}
+  const moveCount=Math.min(countTopSameColor(src),TUBE_CAPACITY-dst.length);
+  if(moveCount===0){selectedTube=-1;renderTubes();return;}
+  moveHistory.push(JSON.parse(JSON.stringify(gameState)));
+  for(let m=0;m<moveCount;m++)dst.push(src.pop());
+  totalMoves++;document.getElementById('g-moves').textContent=totalMoves;
+  selectedTube=-1;updateDoneCount();renderTubes();checkWin();
+}
+function checkWin(){const n=colorCount();const done=gameState.filter(tube=>tube.length===TUBE_CAPACITY&&tube.every(c=>c===tube[0])).length;if(done===n){setTimeout(()=>{document.getElementById('win-sub').textContent='ทำได้ใน '+totalMoves+' ครั้ง';document.getElementById('win-overlay').classList.add('show');},400);}}
+function onWinNextLevel(){document.getElementById('win-overlay').classList.remove('show');unlockNextRevealCell();nextLevel();}
+function undoMove(){if(!moveHistory.length)return;gameState=moveHistory.pop();selectedTube=-1;if(totalMoves>0)totalMoves--;document.getElementById('g-moves').textContent=totalMoves;updateDoneCount();renderTubes();}
+function showHint(){document.querySelectorAll('.tube').forEach(t=>t.classList.remove('hint-from','hint-to'));for(let i=0;i<gameState.length;i++){if(gameState[i].length===0)continue;const srcTop=getTopColor(gameState[i]);for(let j=0;j<gameState.length;j++){if(i===j)continue;const dst=gameState[j];if(dst.length>=TUBE_CAPACITY)continue;if(dst.length===0||getTopColor(dst)===srcTop){const tubes=document.querySelectorAll('.tube');if(tubes[i])tubes[i].classList.add('hint-from');if(tubes[j])tubes[j].classList.add('hint-to');setTimeout(()=>document.querySelectorAll('.tube').forEach(t=>t.classList.remove('hint-from','hint-to')),1800);return;}}}alert('ไม่พบ hint — ลอง Restart ดูครับ');}
+function nextLevel(){currentLevel++;document.getElementById('g-level').textContent=currentLevel;startLevel();}
+function restartLevel(){document.getElementById('win-overlay').classList.remove('show');startLevel();}
+
+/* ══ REVEAL GRID ══ */
+const TOTAL_CELLS=9;
+const PUZZLES=[
+  {answer:'ช้าง',alt:['ช้าง','elephant'],draw:drawElephant},
+  {answer:'แมว',alt:['แมว','cat'],draw:drawCat},
+  {answer:'หมา',alt:['หมา','dog','สุนัข'],draw:drawDog},
+  {answer:'ปลา',alt:['ปลา','fish'],draw:drawFish},
+  {answer:'นก',alt:['นก','bird'],draw:drawBird},
+  {answer:'บ้าน',alt:['บ้าน','house'],draw:drawHouse},
+  {answer:'ดอกไม้',alt:['ดอกไม้','flower'],draw:drawFlower},
+  {answer:'ดวงอาทิตย์',alt:['ดวงอาทิตย์','อาทิตย์','sun'],draw:drawSun},
+  {answer:'เรือ',alt:['เรือ','boat','ship'],draw:drawBoat},
+];
+let currentPuzzleIdx=0,unlockedCells=parseInt(localStorage.getItem('lic_reveal_unlocked')||'0');
+let guessHistory=JSON.parse(localStorage.getItem('lic_guess_history')||'[]'),masterCanvas=null;
+function getCurrentPuzzle(){return PUZZLES[currentPuzzleIdx%PUZZLES.length];}
+function initRevealGrid(){currentPuzzleIdx=parseInt(localStorage.getItem('lic_puzzle_idx')||'0');buildMasterCanvas();buildGrid();updateRevealProgress();renderGuessHistory();}
+function buildMasterCanvas(){masterCanvas=document.createElement('canvas');masterCanvas.width=300;masterCanvas.height=300;const ctx=masterCanvas.getContext('2d');ctx.fillStyle='#f8f4ee';ctx.fillRect(0,0,300,300);getCurrentPuzzle().draw(ctx,300,300);}
+function buildGrid(){
+  const grid=document.getElementById('reveal-grid');grid.innerHTML='';const tileSize=100;
+  for(let i=0;i<TOTAL_CELLS;i++){
+    const cell=document.createElement('div');cell.className='reveal-cell'+(i<unlockedCells?' opened':' locked');
+    const c=document.createElement('canvas');c.width=200;c.height=200;const ctx2=c.getContext('2d');
+    const col=i%3,row=Math.floor(i/3);ctx2.drawImage(masterCanvas,col*tileSize,row*tileSize,tileSize,tileSize,0,0,200,200);cell.appendChild(c);
+    const cover=document.createElement('div');cover.className='cover';cover.textContent='??';
+    if(i<unlockedCells){cover.style.opacity='0';cover.style.transform='scale(0)';}
+    cell.appendChild(cover);grid.appendChild(cell);
+  }
+}
+function updateRevealProgress(){const pct=Math.round(unlockedCells/TOTAL_CELLS*100);document.getElementById('reveal-bar').style.width=pct+'%';document.getElementById('reveal-label').textContent=unlockedCells+' / '+TOTAL_CELLS+' ช่อง · ชนะแต่ละด่านเพื่อเปิดช่องถัดไป';}
+function unlockNextRevealCell(){if(unlockedCells>=TOTAL_CELLS)return;const idx=unlockedCells;unlockedCells++;localStorage.setItem('lic_reveal_unlocked',unlockedCells);const cells=document.querySelectorAll('.reveal-cell');if(cells[idx]){cells[idx].classList.remove('locked');cells[idx].classList.add('opened');const cover=cells[idx].querySelector('.cover');if(cover){cover.style.transition='transform 0.45s cubic-bezier(0.4,0,0.2,1), opacity 0.4s ease';cover.style.transform='scale(0) rotateY(90deg)';cover.style.opacity='0';}cells[idx].style.transition='box-shadow 0.35s';cells[idx].style.boxShadow='0 0 20px rgba(212,168,67,0.5)';setTimeout(()=>{cells[idx].style.boxShadow='';},700);}updateRevealProgress();}
+function submitGuess(){const inp=document.getElementById('guess-input');const val=inp.value.trim();if(!val)return;inp.value='';const resultEl=document.getElementById('guess-result');const puzzle=getCurrentPuzzle();const isCorrect=puzzle.alt.some(a=>val.toLowerCase()===a.toLowerCase());resultEl.style.display='block';if(isCorrect){resultEl.className='guess-result correct';resultEl.textContent='?? ถูกต้อง! คำตอบคือ "'+puzzle.answer+'"';revealAll();}else{resultEl.className='guess-result wrong';resultEl.textContent='❌ ยังไม่ใช่ — ลองดูอีกครั้ง!';}guessHistory.unshift(val+(isCorrect?' ✓':' ✗'));if(guessHistory.length>8)guessHistory.pop();localStorage.setItem('lic_guess_history',JSON.stringify(guessHistory));renderGuessHistory();setTimeout(()=>{resultEl.style.display='none';},3000);}
+function revealAnswer(){const puzzle=getCurrentPuzzle();const resultEl=document.getElementById('guess-result');resultEl.style.display='block';resultEl.className='guess-result correct';resultEl.textContent='?? เฉลย: "'+puzzle.answer+'"';revealAll();setTimeout(()=>{resultEl.style.display='none';},3000);}
+function revealAll(){unlockedCells=TOTAL_CELLS;localStorage.setItem('lic_reveal_unlocked',unlockedCells);document.querySelectorAll('.reveal-cell').forEach((cell,i)=>{cell.classList.remove('locked');cell.classList.add('opened');const cover=cell.querySelector('.cover');if(cover){cover.style.transition=`transform 0.4s ease ${i*0.06}s, opacity 0.4s ease ${i*0.06}s`;cover.style.transform='scale(0)';cover.style.opacity='0';}});updateRevealProgress();}
+function nextPuzzle(){currentPuzzleIdx=(currentPuzzleIdx+1)%PUZZLES.length;localStorage.setItem('lic_puzzle_idx',currentPuzzleIdx);unlockedCells=0;localStorage.setItem('lic_reveal_unlocked',0);guessHistory=[];localStorage.setItem('lic_guess_history','[]');buildMasterCanvas();buildGrid();updateRevealProgress();document.getElementById('guess-history').innerHTML='';}
+function renderGuessHistory(){document.getElementById('guess-history').innerHTML=guessHistory.map(g=>`<span class="guess-tag">${g}</span>`).join('');}
+
+/* ══ DRAW FUNCTIONS ══ */
+function drawElephant(ctx,W,H){ctx.strokeStyle='#4a4a5a';ctx.lineWidth=3;ctx.lineCap='round';ctx.lineJoin='round';ctx.fillStyle='#8ca0b0';ctx.beginPath();ctx.ellipse(160,170,80,60,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.beginPath();ctx.ellipse(90,130,45,40,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#b8c8d0';ctx.beginPath();ctx.ellipse(68,120,22,28,-0.3,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#8ca0b0';ctx.beginPath();ctx.moveTo(65,148);ctx.bezierCurveTo(40,160,30,190,50,210);ctx.bezierCurveTo(58,218,70,210,68,200);ctx.bezierCurveTo(55,185,60,165,80,155);ctx.fill();ctx.stroke();ctx.fillStyle='#2a2a3a';ctx.beginPath();ctx.arc(100,118,5,0,Math.PI*2);ctx.fill();ctx.fillStyle='#8ca0b0';[[120,220],[155,225],[185,225],[215,220]].forEach(([x,y])=>{ctx.beginPath();ctx.roundRect(x-12,y,22,50,5);ctx.fill();ctx.stroke();});ctx.beginPath();ctx.moveTo(238,165);ctx.quadraticCurveTo(260,175,255,195);ctx.stroke();}
+function drawCat(ctx,W,H){ctx.strokeStyle='#3a3040';ctx.lineWidth=2.5;ctx.lineCap='round';ctx.lineJoin='round';ctx.fillStyle='#c8a878';ctx.beginPath();ctx.ellipse(150,195,70,60,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.beginPath();ctx.ellipse(150,120,50,45,0,0,Math.PI*2);ctx.fill();ctx.stroke();[[115,85],[185,85]].forEach(([x,y],i)=>{ctx.fillStyle='#c8a878';ctx.beginPath();ctx.moveTo(x,y+20);ctx.lineTo(x+(i?15:-15),y-15);ctx.lineTo(x+(i?30:0),y+20);ctx.fill();ctx.stroke();ctx.fillStyle='#e8907a';ctx.beginPath();ctx.moveTo(x+2,y+16);ctx.lineTo(x+(i?13:-13),y-8);ctx.lineTo(x+(i?26:2),y+16);ctx.fill();});ctx.fillStyle='#2a2030';ctx.beginPath();ctx.ellipse(133,112,7,9,0,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(167,112,7,9,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#70d070';ctx.beginPath();ctx.ellipse(133,112,4,8,0,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(167,112,4,8,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#e88090';ctx.beginPath();ctx.ellipse(150,128,6,4,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#3a3040';ctx.beginPath();ctx.moveTo(150,132);ctx.lineTo(138,140);ctx.moveTo(150,132);ctx.lineTo(162,140);ctx.stroke();[[80,126,120,124],[80,132,120,132],[85,140,120,140]].forEach(([x1,y1,x2,y2])=>{ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();});[[220,126,180,124],[220,132,180,132],[215,140,180,140]].forEach(([x1,y1,x2,y2])=>{ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();});ctx.beginPath();ctx.moveTo(218,230);ctx.bezierCurveTo(260,220,275,190,255,165);ctx.stroke();}
+function drawDog(ctx,W,H){ctx.strokeStyle='#3a2a20';ctx.lineWidth=2.5;ctx.lineCap='round';ctx.lineJoin='round';ctx.fillStyle='#c89060';ctx.beginPath();ctx.ellipse(155,190,75,55,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.beginPath();ctx.ellipse(150,115,52,48,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#a07040';ctx.beginPath();ctx.ellipse(102,120,22,38,0.3,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.beginPath();ctx.ellipse(198,120,22,38,-0.3,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#2a1a10';ctx.beginPath();ctx.arc(135,108,7,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(165,108,7,0,Math.PI*2);ctx.fill();ctx.fillStyle='white';ctx.beginPath();ctx.arc(138,105,2.5,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(168,105,2.5,0,Math.PI*2);ctx.fill();ctx.fillStyle='#d8a878';ctx.beginPath();ctx.ellipse(150,130,22,18,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#2a1a10';ctx.beginPath();ctx.ellipse(150,122,8,6,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#3a2a20';ctx.beginPath();ctx.moveTo(150,136);ctx.lineTo(138,144);ctx.moveTo(150,136);ctx.lineTo(162,144);ctx.stroke();ctx.fillStyle='#f06070';ctx.beginPath();ctx.ellipse(150,148,10,10,0,0,Math.PI);ctx.fill();ctx.fillStyle='#c89060';[[105,230],[140,235],[165,235],[200,230]].forEach(([x,y])=>{ctx.beginPath();ctx.roundRect(x-11,y,20,45,5);ctx.fill();ctx.stroke();});ctx.beginPath();ctx.moveTo(228,175);ctx.bezierCurveTo(260,155,265,130,248,120);ctx.stroke();}
+function drawFish(ctx,W,H){ctx.strokeStyle='#1a4060';ctx.lineWidth=2.5;ctx.lineCap='round';ctx.lineJoin='round';ctx.fillStyle='#4090d0';ctx.beginPath();ctx.ellipse(145,150,90,50,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#2070b0';ctx.beginPath();ctx.moveTo(240,150);ctx.lineTo(275,115);ctx.lineTo(280,150);ctx.lineTo(275,185);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#60b0e0';ctx.beginPath();ctx.moveTo(120,105);ctx.bezierCurveTo(130,75,160,72,170,102);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='white';ctx.beginPath();ctx.arc(90,143,12,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#1a4060';ctx.beginPath();ctx.arc(93,143,7,0,Math.PI*2);ctx.fill();ctx.fillStyle='white';ctx.beginPath();ctx.arc(95,140,2,0,Math.PI*2);ctx.fill();ctx.strokeStyle='rgba(100,160,220,0.5)';ctx.lineWidth=1.5;[[140,140,22],[160,155,22],[120,155,22],[180,143,22],[140,168,22]].forEach(([x,y,r])=>{ctx.beginPath();ctx.arc(x,y,r,0,Math.PI);ctx.stroke();});ctx.strokeStyle='#1a4060';ctx.lineWidth=2;ctx.beginPath();ctx.arc(60,155,10,0.1,Math.PI-0.1);ctx.stroke();}
+function drawBird(ctx,W,H){ctx.strokeStyle='#1a3050';ctx.lineWidth=2.5;ctx.lineCap='round';ctx.lineJoin='round';ctx.fillStyle='#f0c040';ctx.beginPath();ctx.ellipse(155,175,65,50,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.beginPath();ctx.ellipse(155,112,38,35,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#e0a820';ctx.beginPath();ctx.moveTo(100,170);ctx.bezierCurveTo(65,145,55,185,75,210);ctx.bezierCurveTo(90,225,130,220,140,195);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#d09010';ctx.beginPath();ctx.moveTo(210,195);ctx.lineTo(255,175);ctx.lineTo(255,205);ctx.lineTo(215,215);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#1a3050';ctx.beginPath();ctx.arc(163,105,7,0,Math.PI*2);ctx.fill();ctx.fillStyle='white';ctx.beginPath();ctx.arc(165,103,2.5,0,Math.PI*2);ctx.fill();ctx.fillStyle='#e06020';ctx.beginPath();ctx.moveTo(182,112);ctx.lineTo(210,108);ctx.lineTo(182,120);ctx.closePath();ctx.fill();ctx.stroke();ctx.strokeStyle='#c06020';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(140,222);ctx.lineTo(130,255);ctx.moveTo(130,255);ctx.lineTo(108,265);ctx.moveTo(130,255);ctx.lineTo(140,268);ctx.stroke();ctx.beginPath();ctx.moveTo(165,225);ctx.lineTo(158,255);ctx.moveTo(158,255);ctx.lineTo(138,265);ctx.moveTo(158,255);ctx.lineTo(168,268);ctx.stroke();}
+function drawHouse(ctx,W,H){ctx.strokeStyle='#2a2020';ctx.lineWidth=2.5;ctx.lineCap='round';ctx.lineJoin='round';ctx.fillStyle='#e8d0a0';ctx.beginPath();ctx.rect(60,145,180,120);ctx.fill();ctx.stroke();ctx.fillStyle='#c05030';ctx.beginPath();ctx.moveTo(40,148);ctx.lineTo(150,60);ctx.lineTo(260,148);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#8b5a2b';ctx.beginPath();ctx.roundRect(122,195,55,70,4);ctx.fill();ctx.stroke();ctx.fillStyle='#d4a843';ctx.beginPath();ctx.arc(168,233,4,0,Math.PI*2);ctx.fill();ctx.fillStyle='#a0d0f0';[[75,160,45,38],[180,160,45,38]].forEach(([x,y,w,h])=>{ctx.beginPath();ctx.roundRect(x,y,w,h,3);ctx.fill();ctx.stroke();ctx.strokeStyle='#2a2020';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(x+w/2,y);ctx.lineTo(x+w/2,y+h);ctx.moveTo(x,y+h/2);ctx.lineTo(x+w,y+h/2);ctx.stroke();ctx.lineWidth=2.5;});ctx.fillStyle='#804030';ctx.beginPath();ctx.rect(190,72,28,55);ctx.fill();ctx.stroke();ctx.strokeStyle='#b0b0b0';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(200,72);ctx.bezierCurveTo(195,55,210,45,205,30);ctx.stroke();ctx.beginPath();ctx.moveTo(212,68);ctx.bezierCurveTo(207,50,222,40,218,25);ctx.stroke();}
+function drawFlower(ctx,W,H){ctx.strokeStyle='#3a6a20';ctx.lineWidth=4;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(150,280);ctx.bezierCurveTo(145,230,155,200,150,165);ctx.stroke();ctx.fillStyle='#50a030';ctx.beginPath();ctx.moveTo(150,220);ctx.bezierCurveTo(115,200,100,175,115,165);ctx.bezierCurveTo(125,175,140,200,150,220);ctx.fill();ctx.beginPath();ctx.moveTo(150,200);ctx.bezierCurveTo(185,180,200,155,185,145);ctx.bezierCurveTo(175,155,160,180,150,200);ctx.fill();const colors=['#f05080','#f87040','#f0d030','#c040c0','#4090e0','#50c060','#f06090','#e8b020'];for(let i=0;i<8;i++){ctx.fillStyle=colors[i];const a=i*Math.PI/4,px=150+Math.cos(a)*42,py=145+Math.sin(a)*42;ctx.beginPath();ctx.ellipse(px,py,16,24,a,0,Math.PI*2);ctx.fill();ctx.strokeStyle='rgba(0,0,0,0.15)';ctx.lineWidth=1;ctx.stroke();}ctx.fillStyle='#f0e030';ctx.beginPath();ctx.arc(150,145,22,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#c0a010';ctx.lineWidth=2;ctx.stroke();ctx.fillStyle='#c07010';for(let i=0;i<7;i++){const a=i*Math.PI*2/7;ctx.beginPath();ctx.arc(150+Math.cos(a)*12,145+Math.sin(a)*12,3,0,Math.PI*2);ctx.fill();}}
+function drawSun(ctx,W,H){ctx.fillStyle='#d0eaf8';ctx.fillRect(0,0,300,300);ctx.strokeStyle='#f0c020';ctx.lineWidth=4;ctx.lineCap='round';for(let i=0;i<12;i++){const a=i*Math.PI/6,r1=68,r2=95;ctx.beginPath();ctx.moveTo(150+Math.cos(a)*r1,150+Math.sin(a)*r1);ctx.lineTo(150+Math.cos(a)*r2,150+Math.sin(a)*r2);ctx.stroke();}ctx.fillStyle='#f8d020';ctx.beginPath();ctx.arc(150,150,60,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#e0a010';ctx.lineWidth=3;ctx.stroke();ctx.fillStyle='#c07a10';ctx.beginPath();ctx.arc(132,142,7,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(168,142,7,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#c07a10';ctx.lineWidth=3;ctx.beginPath();ctx.arc(150,158,20,0.15*Math.PI,0.85*Math.PI);ctx.stroke();}
+function drawBoat(ctx,W,H){ctx.fillStyle='#a0c8e8';ctx.beginPath();ctx.rect(0,200,300,100);ctx.fill();ctx.strokeStyle='#7090b8';ctx.lineWidth=2;for(let wx=0;wx<300;wx+=40){ctx.beginPath();ctx.moveTo(wx,215);ctx.bezierCurveTo(wx+10,205,wx+20,205,wx+30,215);ctx.stroke();ctx.beginPath();ctx.moveTo(wx+5,230);ctx.bezierCurveTo(wx+15,220,wx+25,220,wx+35,230);ctx.stroke();}ctx.fillStyle='#8b4513';ctx.beginPath();ctx.moveTo(55,200);ctx.lineTo(245,200);ctx.lineTo(220,240);ctx.lineTo(80,240);ctx.closePath();ctx.fill();ctx.strokeStyle='#3a2008';ctx.lineWidth=2.5;ctx.stroke();ctx.fillStyle='#c87840';ctx.beginPath();ctx.rect(70,185,160,18);ctx.fill();ctx.stroke();ctx.strokeStyle='#3a2008';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(150,185);ctx.lineTo(150,70);ctx.stroke();ctx.fillStyle='white';ctx.beginPath();ctx.moveTo(153,75);ctx.lineTo(215,130);ctx.lineTo(153,180);ctx.closePath();ctx.fill();ctx.fillStyle='rgba(200,200,220,0.6)';ctx.beginPath();ctx.moveTo(147,75);ctx.lineTo(85,130);ctx.lineTo(147,180);ctx.closePath();ctx.fill();ctx.strokeStyle='#9090a0';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(153,75);ctx.lineTo(215,130);ctx.lineTo(153,180);ctx.moveTo(147,75);ctx.lineTo(85,130);ctx.lineTo(147,180);ctx.stroke();ctx.fillStyle='#e03030';ctx.beginPath();ctx.moveTo(150,70);ctx.lineTo(175,60);ctx.lineTo(150,50);ctx.closePath();ctx.fill();}
+
+/* ══ TIMER ══ */
+let timerTotal=0,timerLeft=0,timerRunning=false,timerInterval=null;
+function setTimer(m){timerTotal=m*60;timerLeft=timerTotal;timerRunning=false;if(timerInterval)clearInterval(timerInterval);document.getElementById('timer-toggle-btn').textContent='▶ Start';document.getElementById('timer-toggle-btn').classList.remove('active-timer');updateTimerDisplay();}
+function toggleTimer(){if(!timerTotal){alert('เลือก 5m / 10m / 15m ก่อนครับ');return;}if(timerLeft<=0)timerLeft=timerTotal;timerRunning=!timerRunning;const btn=document.getElementById('timer-toggle-btn');if(timerRunning){btn.textContent='⏸ Pause';btn.classList.add('active-timer');timerInterval=setInterval(()=>{if(!timerRunning)return;timerLeft--;updateTimerDisplay();if(timerLeft<=0){clearInterval(timerInterval);timerRunning=false;btn.textContent='▶ Start';btn.classList.remove('active-timer');alert('⏰ หมดเวลา! กลับไปดูกราฟได้แล้ว');}},1000);}else{btn.textContent='▶ Start';btn.classList.remove('active-timer');clearInterval(timerInterval);}}
+function updateTimerDisplay(){const m=Math.floor(timerLeft/60).toString().padStart(2,'0'),s=(timerLeft%60).toString().padStart(2,'0');document.getElementById('timer-val').textContent=m+':'+s;const pct=timerTotal>0?(timerLeft/timerTotal)*100:0;const fill=document.getElementById('timer-fill');fill.style.width=pct+'%';fill.style.background=pct>50?'var(--green)':pct>20?'var(--amber)':'var(--red)';}
+
+/* ══ WISH LIST ══ */
+let wishItems=JSON.parse(localStorage.getItem('lic_wish')||'[]');
+let wishPriority='med',wishRate=parseFloat(localStorage.getItem('lic_wish_rate')||'33');
+document.getElementById('wish-rate').value=wishRate;
+function saveWishRate(){wishRate=parseFloat(document.getElementById('wish-rate').value)||33;localStorage.setItem('lic_wish_rate',wishRate);}
+function syncWishPrice(from){if(from==='usd'){const u=parseFloat(document.getElementById('wf-price-usd').value)||0;document.getElementById('wf-price-thb').value=u?Math.round(u*wishRate):'';}else{const t=parseFloat(document.getElementById('wf-price-thb').value)||0;document.getElementById('wf-price-usd').value=t?(t/wishRate).toFixed(2):'';}}
+function selectWishPriority(p,el){wishPriority=p;document.querySelectorAll('.priority-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');}
+function addWishItem(){
+  const emoji=document.getElementById('wf-emoji').value.trim()||'??';
+  const name=document.getElementById('wf-name').value.trim();
+  const cat=document.getElementById('wf-cat').value;
+  const priceUsd=parseFloat(document.getElementById('wf-price-usd').value);
+  if(!name||!priceUsd){alert('กรุณากรอกชื่อและราคา');return;}
+  wishItems.unshift({id:Date.now(),emoji,name,cat,priceUsd,priority:wishPriority,bought:false,addedAt:new Date().toLocaleDateString('th-TH')});
+  saveWish();renderWishPage();
+  document.getElementById('wf-emoji').value='';document.getElementById('wf-name').value='';document.getElementById('wf-price-usd').value='';document.getElementById('wf-price-thb').value='';
+  wishPriority='med';document.querySelectorAll('.priority-btn').forEach(b=>b.classList.remove('active'));document.getElementById('wpri-med').classList.add('active');
+}
+function toggleWishBought(id){const item=wishItems.find(w=>w.id===id);if(item)item.bought=!item.bought;saveWish();renderWishPage();}
+function deleteWishItem(id){wishItems=wishItems.filter(w=>w.id!==id);saveWish();renderWishPage();}
+function saveWish(){localStorage.setItem('lic_wish',JSON.stringify(wishItems));}
+function renderWishPage(){
+  const netPnl=trades.reduce((s,t)=>s+t.pnl,0),rate=wishRate,netThb=netPnl*rate;
+  const pnlEl=document.getElementById('wish-pnl-usd');pnlEl.textContent=(netPnl>=0?'+':'')+'$'+Math.abs(netPnl).toFixed(0);pnlEl.className='wish-pnl-val '+(netPnl>=0?'pos':'neg');
+  document.getElementById('wish-pnl-thb').textContent='≈ ฿'+Math.round(netThb).toLocaleString();
+  const totalTarget=wishItems.filter(w=>!w.bought).reduce((s,w)=>s+w.priceUsd,0);
+  const totalAll=wishItems.reduce((s,w)=>s+w.priceUsd,0);
+  const boughtCount=wishItems.filter(w=>w.bought).length;
+  const canAfford=wishItems.filter(w=>!w.bought&&w.priceUsd<=netPnl).length;
+  const biggest=wishItems.filter(w=>!w.bought).sort((a,b)=>b.priceUsd-a.priceUsd)[0];
+  const gap=Math.max(0,totalTarget-netPnl);
+  const pct=totalTarget>0?Math.min(100,netPnl/totalTarget*100):0;
+  document.getElementById('wish-total-bar').style.width=Math.max(0,pct)+'%';
+  document.getElementById('wish-total-bar').style.background=pct>=100?'var(--green)':pct>50?'var(--gold)':'var(--red)';
+  document.getElementById('wish-total-pct').textContent=pct.toFixed(0)+'%';
+  document.getElementById('wish-total-pct').className='wish-progress-pct '+(pct>=100?'pos':pct>50?'gold':'neg');
+  document.getElementById('ws-total').textContent=wishItems.length+' ชิ้น';
+  document.getElementById('ws-bought').textContent=boughtCount+' ชิ้น';
+  document.getElementById('ws-gap').textContent='-$'+gap.toFixed(0);
+  document.getElementById('ws-gap').className='wish-sum-val '+(gap>0?'neg':'pos');
+  document.getElementById('ws-biggest').textContent=biggest?'$'+biggest.priceUsd.toFixed(0):'—';
+  document.getElementById('ws-canafford').textContent=canAfford+' ชิ้น';
+  document.getElementById('ws-sumtarget').textContent='$'+totalAll.toFixed(0);
+  const grid=document.getElementById('wish-grid');
+  if(!wishItems.length){grid.innerHTML='<div class="wish-empty"><p>??</p><p>ยังไม่มีรายการ — เพิ่มของที่อยากได้ด้านบน</p></div>';return;}
+  const priOrder={high:0,med:1,low:2};
+  const sorted=[...wishItems].sort((a,b)=>{if(a.bought!==b.bought)return a.bought?1:-1;if(priOrder[a.priority]!==priOrder[b.priority])return priOrder[a.priority]-priOrder[b.priority];return b.priceUsd-a.priceUsd;});
+  grid.innerHTML=sorted.map(w=>{
+    const thb=Math.round(w.priceUsd*rate),wp=netPnl>0?Math.min(100,netPnl/w.priceUsd*100):0;
+    const barCol=wp>=100?'var(--green)':wp>50?'var(--gold)':'var(--red)';
+    const priLabel={high:'?? ต้องได้',med:'?? อยากได้',low:'?? ถ้าเหลือ'}[w.priority];
+    const priClass={high:'pri-high',med:'pri-med',low:'pri-low'}[w.priority];
+    const canBuy=!w.bought&&netPnl>=w.priceUsd;
+    const badge=w.bought?'<div class="wish-bought-badge">✓ ซื้อแล้ว!</div>':canBuy?'<div class="wish-can-badge">?? ซื้อได้แล้ว!</div>':'';
+    return`<div class="wish-card${w.bought?' bought':''}">${badge}<div class="wish-card-emoji">${w.emoji}</div><div class="wish-card-name">${w.name}</div><div class="wish-card-cat">${w.cat}</div><span class="wish-card-priority ${priClass}">${priLabel}</span><div class="wish-card-price ${w.bought?'pos':'neutral'}">$${w.priceUsd.toFixed(0)}</div><div class="wish-card-thb">≈ ฿${thb.toLocaleString()}</div>${!w.bought?`<div class="wish-card-bar"><div class="wish-card-bar-fill" style="width:${wp}%;background:${barCol}"></div></div><div class="wish-card-pct">${wp>=100?'✓ กำไรพอแล้ว!':'กำไรถึง '+wp.toFixed(0)+'%'}</div>`:''}<div class="wish-card-actions"><button class="wish-buy-btn${w.bought?' unbuy':''}" onclick="toggleWishBought(${w.id})">${w.bought?'↩ ยกเลิก':'✓ ซื้อแล้ว'}</button><button class="wish-del-btn" onclick="deleteWishItem(${w.id})">✕</button></div></div>`;
+  }).join('');
+}
+
+/* ══ TOOLS ══ */
+(function(){
+  /* 1 — Daily P&L Target */
+  var dpBtn=document.getElementById('btn-dp-calc');
+  if(dpBtn) dpBtn.addEventListener('click',function(){
+    var monthly=parseFloat(document.getElementById('dp-monthly').value);
+    var totalDays=parseFloat(document.getElementById('dp-days').value)||20;
+    var tradedDays=parseFloat(document.getElementById('dp-traded').value)||0;
+    var earned=parseFloat(document.getElementById('dp-earned').value)||0;
+    if(!monthly||monthly<=0){alert('กรุณากรอกเป้ากำไรเดือนนี้');return;}
+    var origPerDay=monthly/totalDays;
+    var remaining=monthly-earned;
+    var daysLeft=totalDays-tradedDays;
+    var needPerDay=daysLeft>0?remaining/daysLeft:0;
+    document.getElementById('dp-r-orig').textContent='$'+origPerDay.toFixed(0);
+    document.getElementById('dp-r-remain').textContent=remaining<=0?'✓ ถึงเป้าแล้ว!':'-$'+Math.abs(remaining).toFixed(0);
+    document.getElementById('dp-r-remain').className='tool-result-val '+(remaining<=0?'pos':'neg');
+    document.getElementById('dp-r-dayleft').textContent=daysLeft+' วัน';
+    document.getElementById('dp-r-need').textContent=needPerDay<=0?'✓ ครบแล้ว!':'$'+needPerDay.toFixed(0);
+    document.getElementById('dp-r-need').className='tool-result-val '+(needPerDay<=0?'pos':needPerDay<=200?'gold':'neg');
+    var v=document.getElementById('dp-verdict');v.style.display='block';
+    if(remaining<=0){v.style.cssText='display:block;background:var(--green-g);border:1px solid var(--green-b);color:var(--green);padding:10px 14px;border-radius:6px;font-family:var(--mono);font-size:12px';v.textContent='🎉 ถึงเป้าเดือนนี้แล้ว!';}
+    else if(needPerDay<=200){v.style.cssText='display:block;background:var(--gold-g);border:1px solid var(--gold-b);color:var(--gold-l);padding:10px 14px;border-radius:6px;font-family:var(--mono);font-size:12px';v.textContent='○ ยังอยู่ในแผน — ต้องทำ $'+needPerDay.toFixed(0)+'/วัน ใน '+daysLeft+' วัน';}
+    else{v.style.cssText='display:block;background:var(--red-g);border:1px solid var(--red-b);color:var(--red);padding:10px 14px;border-radius:6px;font-family:var(--mono);font-size:12px';v.textContent='⚠ ต้องทำ $'+needPerDay.toFixed(0)+'/วัน — สูงกว่าเป้าปกติ';}
+    document.getElementById('dp-result').classList.add('show');
+  });
+
+  /* 2 — Drawdown Calculator */
+  var ddBtn=document.getElementById('btn-dd-calc');
+  if(ddBtn) ddBtn.addEventListener('click',function(){
+    var balance=parseFloat(document.getElementById('dd-balance').value);
+    var threshold=parseFloat(document.getElementById('dd-threshold').value);
+    if(!balance||!threshold){alert('กรุณากรอก Balance และ Threshold');return;}
+    var buffer=balance-threshold;
+    var bufferPct=buffer/balance*100;
+    var maxLoss=buffer*0.1;
+    var slAt2=balance*0.02;
+    document.getElementById('dd-r-buffer').textContent=buffer<=0?'โดนแล้ว!':'$'+buffer.toFixed(0);
+    document.getElementById('dd-r-buffer').className='tool-result-val '+(buffer<=0?'neg':buffer<500?'neg':buffer<1500?'gold':'pos');
+    document.getElementById('dd-r-pct').textContent=bufferPct.toFixed(1)+'%';
+    document.getElementById('dd-r-pct').className='tool-result-val '+(bufferPct<2?'neg':bufferPct<5?'gold':'pos');
+    document.getElementById('dd-r-max').textContent='$'+maxLoss.toFixed(0);
+    document.getElementById('dd-r-sl').textContent='$'+slAt2.toFixed(0);
+    var v=document.getElementById('dd-verdict');v.style.display='block';
+    if(buffer<=0){v.style.cssText='display:block;background:var(--red-g);border:1px solid var(--red-b);color:var(--red);padding:10px 14px;border-radius:6px;font-family:var(--mono);font-size:12px';v.textContent='❌ โดน Drawdown แล้ว! หยุดเทรดทันที';}
+    else if(buffer<500){v.style.cssText='display:block;background:var(--red-g);border:1px solid var(--red-b);color:var(--red);padding:10px 14px;border-radius:6px;font-family:var(--mono);font-size:12px';v.textContent='⚠ อันตราย! buffer $'+buffer.toFixed(0)+' — ลด size ทันที';}
+    else if(buffer<1500){v.style.cssText='display:block;background:var(--gold-g);border:1px solid var(--gold-b);color:var(--gold-l);padding:10px 14px;border-radius:6px;font-family:var(--mono);font-size:12px';v.textContent='⚠ ระวัง buffer $'+buffer.toFixed(0)+' — risk ไม่เกิน $'+maxLoss.toFixed(0)+'/trade';}
+    else{v.style.cssText='display:block;background:var(--green-g);border:1px solid var(--green-b);color:var(--green);padding:10px 14px;border-radius:6px;font-family:var(--mono);font-size:12px';v.textContent='✓ Buffer ปลอดภัย $'+buffer.toFixed(0)+' ('+bufferPct.toFixed(1)+'%)';}
+    document.getElementById('dd-result').classList.add('show');
+  });
+
+  /* 3 — Profit Withdrawal Planner */
+  var pwBtn=document.getElementById('btn-pw-calc');
+  if(pwBtn) pwBtn.addEventListener('click',function(){
+    var profit=parseFloat(document.getElementById('pw-profit').value);
+    var split=parseFloat(document.getElementById('pw-split').value)||90;
+    var withdrawPct=parseFloat(document.getElementById('pw-withdraw-pct').value)||50;
+    var rate=parseFloat(document.getElementById('pw-rate').value)||33;
+    if(!profit||profit<=0){alert('กรุณากรอกกำไรเดือนนี้');return;}
+    var netSplit=profit*split/100;
+    var withdrawUsd=netSplit*withdrawPct/100;
+    var keepUsd=netSplit-withdrawUsd;
+    var withdrawThb=withdrawUsd*rate;
+    document.getElementById('pw-r-net').textContent='$'+netSplit.toFixed(0);
+    document.getElementById('pw-r-withdraw').textContent='$'+withdrawUsd.toFixed(0);
+    document.getElementById('pw-r-thb').textContent='฿'+Math.round(withdrawThb).toLocaleString();
+    document.getElementById('pw-r-keep').textContent='$'+keepUsd.toFixed(0);
+    document.getElementById('pw-breakdown').innerHTML=
+      '💰 กำไรรวม: <span style="color:var(--text)">$'+profit.toFixed(0)+'</span><br>'
+      +'📊 Profit split '+split+'%: <span style="color:var(--green)">$'+netSplit.toFixed(0)+'</span><br>'
+      +'📤 ถอน '+withdrawPct+'%: <span style="color:var(--gold-l)">$'+withdrawUsd.toFixed(0)+' ≈ ฿'+Math.round(withdrawThb).toLocaleString()+'</span><br>'
+      +'📈 เก็บ compound: <span style="color:var(--green)">$'+keepUsd.toFixed(0)+'</span>';
+    document.getElementById('pw-result').classList.add('show');
+  });
+
+  /* 4 — Contract Size Calculator */
+  var csProduct=document.getElementById('cs-product');
+  var csCustomWrap=document.getElementById('cs-custom-wrap');
+  if(csProduct) csProduct.addEventListener('change',function(){
+    if(csCustomWrap) csCustomWrap.style.display=this.value==='custom'?'flex':'none';
+  });
+  var pointValues={xauusd_mini:1,xauusd_full:10,nas_micro:0.20,nas_full:20,sp_micro:1.25,sp_full:50};
+  var csBtn=document.getElementById('btn-cs-calc');
+  if(csBtn) csBtn.addEventListener('click',function(){
+    var prod=document.getElementById('cs-product').value;
+    var ppv=prod==='custom'?parseFloat(document.getElementById('cs-custom-val').value):pointValues[prod];
+    var points=parseFloat(document.getElementById('cs-points').value);
+    var target=parseFloat(document.getElementById('cs-target').value);
+    if(!ppv||!points||!target){alert('กรุณากรอกให้ครบ');return;}
+    var profitPer1=points*ppv;
+    var ctNeeded=target/profitPer1;
+    var ctRounded=Math.ceil(ctNeeded*100)/100;
+    var actualProfit=ctRounded*profitPer1;
+    var halfProfit=ctRounded*points*0.5*ppv;
+    document.getElementById('cs-r-contracts').textContent=ctNeeded<1?ctNeeded.toFixed(3)+' (min 1)':ctNeeded.toFixed(2);
+    document.getElementById('cs-r-contracts').className='tool-result-val gold';
+    document.getElementById('cs-r-ppv').textContent='$'+ppv+' / pt';
+    document.getElementById('cs-r-profit').textContent='$'+actualProfit.toFixed(0);
+    document.getElementById('cs-r-half').textContent='$'+halfProfit.toFixed(0);
+    var rows='';
+    [1,2,3,4,5].forEach(function(ct){
+      var p=ct*profitPer1;
+      var isRec=ct===Math.max(1,Math.ceil(ctNeeded));
+      rows+='<div style="display:flex;align-items:center;padding:9px 14px;border-bottom:1px solid var(--b1);'+(isRec?'background:rgba(212,168,67,0.08)':'')+'">'
+        +'<div style="font-family:var(--mono);font-size:12px;font-weight:600;color:'+(isRec?'var(--gold-l)':'var(--text)')+';width:130px">'+ct+' contract'+(ct>1?'s':'')+(isRec?' ✓':'')+'</div>'
+        +'<div style="font-family:var(--mono);font-size:14px;font-weight:600;color:var(--green);flex:1">+$'+p.toFixed(0)+'</div>'
+        +'<div style="font-family:var(--mono);font-size:10px;color:var(--text3)">$'+ppv+'/pt × '+points+' pts</div>'
+        +'</div>';
+    });
+    document.getElementById('cs-table-body').innerHTML=rows;
+    document.getElementById('cs-result').classList.add('show');
+  });
+
+  /* Payout Tracker */
+  var ptData=JSON.parse(localStorage.getItem('wtp_pt3')||'{}');
+  var ptMonth='',openDay=-1;
+  function ptKey(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
+  function ptLabel(k){var p=k.split('-');var m=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];return m[parseInt(p[1])-1]+' '+p[0];}
+  function ptSave(){localStorage.setItem('wtp_pt3',JSON.stringify(ptData));}
+  function ptEnsure(k){if(!ptData[k])ptData[k]={days:{}};}
+  function closePopup(){var p=document.getElementById('pt-popup');if(p)p.style.display='none';openDay=-1;}
+  function openPopup(day,cell){
+    var popup=document.getElementById('pt-popup');if(!popup)return;
+    if(openDay===day){closePopup();return;}
+    openDay=day;
+    var rect=cell.getBoundingClientRect();
+    var top=rect.bottom+6+window.scrollY,left=rect.left+window.scrollX;
+    if(left+200>window.innerWidth)left=window.innerWidth-210;
+    if(top+150>window.innerHeight+window.scrollY)top=rect.top-160+window.scrollY;
+    popup.style.top=top+'px';popup.style.left=left+'px';popup.style.display='block';
+    document.getElementById('pt-popup-title').textContent='P&L วันที่ '+day;
+    var cur=ptData[ptMonth]&&ptData[ptMonth].days[day]?ptData[ptMonth].days[day].pnl:null;
+    var inp=document.getElementById('pt-popup-val');inp.value=cur!==null?cur:'';
+    setTimeout(function(){inp.focus();if(inp.value)inp.select();},50);
+    document.getElementById('pt-popup-save').onclick=function(){
+      var val=parseFloat(document.getElementById('pt-popup-val').value);
+      if(isNaN(val)){alert('กรุณากรอกตัวเลข');return;}
+      ptEnsure(ptMonth);ptData[ptMonth].days[day]={pnl:val};ptSave();closePopup();renderDays();
+    };
+    document.getElementById('pt-popup-clear').onclick=function(){
+      if(ptData[ptMonth]&&ptData[ptMonth].days[day])delete ptData[ptMonth].days[day];
+      ptSave();closePopup();renderDays();
+    };
+  }
+  function renderMonths(){
+    var row=document.getElementById('pt-month-row');if(!row)return;
+    var keys=Object.keys(ptData).sort();if(keys.indexOf(ptMonth)<0)keys.push(ptMonth);
+    row.innerHTML='';
+    keys.forEach(function(k){
+      var btn=document.createElement('button');btn.textContent=ptLabel(k);
+      btn.style.cssText='padding:6px 12px;border-radius:6px;font-family:var(--mono);font-size:11px;cursor:pointer;border:1px solid '+(k===ptMonth?'var(--gold-b)':'var(--b1)')+';background:'+(k===ptMonth?'var(--gold-g)':'var(--s2)')+';color:'+(k===ptMonth?'var(--gold-l)':'var(--text2)');
+      btn.addEventListener('click',function(){ptMonth=k;ptEnsure(k);renderMonths();renderDays();});
+      row.appendChild(btn);
+    });
+  }
+  function renderDays(){
+    var days=(ptData[ptMonth]&&ptData[ptMonth].days)||{};
+    var grid=document.getElementById('pt-days-grid');if(!grid)return;
+    grid.innerHTML='';
+    for(var d=1;d<=20;d++){
+      (function(day){
+        var e=days[day],pnl=e?e.pnl:null;
+        var isWin=pnl!==null&&pnl>=150,isLose=pnl!==null&&pnl<0;
+        var cell=document.createElement('div');
+        cell.className='pday'+(isWin?' win':isLose?' lose':'');
+        var icon=pnl!==null?(isWin?'✅':isLose?'❌':'📊'):'＋';
+        var col=pnl!==null?(isWin?'var(--green)':isLose?'var(--red)':'var(--gold)'):'var(--text3)';
+        var txt=pnl!==null?((pnl>=0?'+':'')+'$'+pnl.toFixed(0)):'–';
+        cell.innerHTML='<div class="pday-num">Day '+day+'</div><div class="pday-icon">'+icon+'</div><div class="pday-pnl" style="color:'+col+'">'+txt+'</div>';
+        cell.addEventListener('click',function(){openPopup(day,cell);});
+        grid.appendChild(cell);
+      })(d);
+    }
+    renderSummary();
+  }
+  function renderSummary(){
+    var days=(ptData[ptMonth]&&ptData[ptMonth].days)||{};
+    var entries=Object.values(days);
+    var wins=entries.filter(function(e){return e.pnl>=150;}).length;
+    var total=entries.reduce(function(s,e){return s+e.pnl;},0);
+    var losses=entries.filter(function(e){return e.pnl<0;});
+    var worst=losses.length?Math.min.apply(null,losses.map(function(e){return e.pnl;})):null;
+    var set=function(id,txt,cls){var el=document.getElementById(id);if(el){el.textContent=txt;if(cls)el.className=cls;}};
+    set('pt-windays',wins+'/5','payout-sum-val '+(wins>=5?'pos':wins>=3?'gold':'neutral'));
+    set('pt-total',(total>=0?'+':'')+'$'+total.toFixed(0),'payout-sum-val '+(total>0?'gold':total<0?'neg':'neutral'));
+    set('pt-payout',total>0?'$'+(total*0.9).toFixed(0):'$0',null);
+    set('pt-left',wins>=5?'ครบแล้ว! 🎉':(5-wins)+' winning days',null);
+    set('pt-worst',worst!==null?'$'+worst.toFixed(0):'—',null);
+    set('pt-traded',entries.length+' วัน',null);
+    var rd=document.getElementById('pt-ready');if(rd)rd.classList.toggle('show',wins>=5);
+  }
+  function initPT(){
+    if(!ptMonth){ptMonth=ptKey();ptEnsure(ptMonth);}
+    renderMonths();renderDays();
+  }
+  window._initPT=initPT;
+  document.addEventListener('mousedown',function(e){
+    var popup=document.getElementById('pt-popup');
+    if(popup&&popup.style.display!=='none'&&!popup.contains(e.target)&&!e.target.closest('.pday'))closePopup();
+  });
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')closePopup();});
+  var popInp=document.getElementById('pt-popup-val');
+  if(popInp)popInp.addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('pt-popup-save').click();});
+  var addBtn=document.getElementById('btn-pt-add');
+  if(addBtn)addBtn.addEventListener('click',function(){
+    var keys=Object.keys(ptData).sort();
+    var last=keys.length?keys[keys.length-1]:ptKey();
+    var p=last.split('-').map(Number),ny=p[0],nm=p[1]+1;
+    if(nm>12){nm=1;ny++;}
+    var nk=ny+'-'+String(nm).padStart(2,'0');
+    ptEnsure(nk);ptMonth=nk;ptSave();renderMonths();renderDays();
+  });
+  var resetBtn=document.getElementById('btn-pt-reset');
+  if(resetBtn)resetBtn.addEventListener('click',function(){
+    if(!confirm('ล้างข้อมูลเดือนนี้?'))return;
+    ptData[ptMonth]={days:{}};ptSave();renderDays();
+  });
+})();
+
+/* ══ NOTE ══ */
+(function(){
+  var notes=JSON.parse(localStorage.getItem('lic_notes')||'[]');
+  var currentNoteId=null,isPreview=false,autoSaveTimer=null;
+  var undoStack=[],undoMax=50;
+  var TAGS={'ICT':'var(--blue)','SMC':'var(--purple)','Price Action':'var(--gold)','Psychology':'var(--red)','Risk':'var(--red)','Setup':'var(--green)','Review':'var(--text2)','อื่นๆ':'var(--text3)'};
+
+  function saveNotes(){localStorage.setItem('lic_notes',JSON.stringify(notes));}
+  function escHtml(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+  /* ── UNDO STACK ── */
+  function pushUndo(val){
+    undoStack.push(val);
+    if(undoStack.length>undoMax) undoStack.shift();
+    updateUndoBtn();
+  }
+  function doUndo(){
+    if(!undoStack.length) return;
+    var ta=document.getElementById('note-textarea');
+    if(!ta) return;
+    ta.value=undoStack.pop();
+    autoSave(); updateUndoBtn();
+  }
+  function updateUndoBtn(){
+    var btn=document.getElementById('note-undo-btn');
+    if(btn) btn.style.opacity=undoStack.length?'1':'0.4';
+  }
+
+  /* ── NOTES CRUD ── */
+  function newNote(){
+    var id=Date.now();
+    notes.unshift({id:id,title:'Note ใหม่',tag:'ICT',content:'',images:[],updatedAt:new Date().toLocaleDateString('th-TH')});
+    saveNotes(); renderNoteList(); openNote(id);
+  }
+  function deleteNote(id){
+    if(!confirm('ลบ Note นี้?')) return;
+    notes=notes.filter(function(n){return n.id!==id;});
+    if(currentNoteId===id){currentNoteId=null; renderEditor(null);}
+    saveNotes(); renderNoteList();
+  }
+  function openNote(id){
+    currentNoteId=id; isPreview=false; undoStack=[];
+    renderNoteList();
+    var note=notes.find(function(n){return n.id===id;});
+    if(note) renderEditor(note);
+  }
+  function getCurrentNote(){return notes.find(function(n){return n.id===currentNoteId;});}
+
+  function autoSave(){
+    clearTimeout(autoSaveTimer);
+    autoSaveTimer=setTimeout(function(){
+      var note=getCurrentNote(); if(!note) return;
+      var ta=document.getElementById('note-textarea');
+      var ti=document.getElementById('note-title-input');
+      var tg=document.getElementById('note-tag-select');
+      if(ta) note.content=ta.value;
+      if(ti) note.title=ti.value||'ไม่มีชื่อ';
+      if(tg) note.tag=tg.value;
+      note.updatedAt=new Date().toLocaleDateString('th-TH');
+      saveNotes(); renderNoteList();
+      var fs=document.getElementById('note-footer-status');
+      if(fs) fs.textContent='บันทึกแล้ว · '+note.updatedAt;
+    },800);
+  }
+
+  /* ── LIST ── */
+  function renderNoteList(){
+    var wrap=document.getElementById('note-list-items'); if(!wrap) return;
+    if(!notes.length){
+      wrap.innerHTML='<div class="note-empty" style="padding:24px 16px"><p>📝</p><p style="font-size:11px">ยังไม่มี Note</p></div>';
+      return;
+    }
+    wrap.innerHTML=notes.map(function(n){
+      var tc=TAGS[n.tag]||'var(--text3)';
+      var act=n.id===currentNoteId;
+      return '<div class="note-list-item'+(act?' active':'')+'" data-id="'+n.id+'">'
+        +'<div class="note-item-title">'+escHtml(n.title)+'</div>'
+        +'<div class="note-item-meta">'
+          +'<span class="note-item-tag" style="background:'+tc+'22;color:'+tc+';border:1px solid '+tc+'44">'+escHtml(n.tag)+'</span>'
+          +'<span>'+escHtml(n.updatedAt||'')+'</span>'
+        +'</div>'
+        +'<button class="note-item-del" data-del="'+n.id+'">✕</button>'
+        +'</div>';
+    }).join('');
+    wrap.querySelectorAll('.note-list-item').forEach(function(el){
+      el.addEventListener('click',function(e){
+        if(e.target.dataset.del) return;
+        openNote(parseInt(el.dataset.id));
+      });
+    });
+    wrap.querySelectorAll('[data-del]').forEach(function(btn){
+      btn.addEventListener('click',function(e){
+        e.stopPropagation();
+        deleteNote(parseInt(btn.dataset.del));
+      });
+    });
+  }
+
+  /* ── EDITOR ── */
+  function buildTagOptions(cur){
+    return Object.keys(TAGS).map(function(t){
+      return '<option value="'+t+'"'+(cur===t?' selected':'')+'>'+t+'</option>';
+    }).join('');
+  }
+
+  function renderEditor(note){
+    var wrap=document.getElementById('note-editor-wrap'); if(!wrap) return;
+    if(!note){
+      wrap.innerHTML='<div class="note-empty" style="min-height:300px"><p>📒</p><p>เลือก Note หรือกด + สร้างใหม่</p></div>';
+      return;
+    }
+
+    // HIGHLIGHT colors: syntax ==text== for yellow, ==g:text== green, ==r:text== red, ==b:text== blue
+    // FONT colors: [[g:text]] gold, [[n:text]] green, [[r:text]] red, [[b:text]] blue, [[p:text]] purple
+
+    wrap.innerHTML=
+      '<div class="note-editor-top">'
+        +'<input class="note-title-input" id="note-title-input" value="'+escHtml(note.title)+'" placeholder="ชื่อ Note…">'
+        +'<select class="note-tag-select" id="note-tag-select">'+buildTagOptions(note.tag)+'</select>'
+        +'<button class="note-btn danger" id="note-del-btn" style="padding:5px 12px;font-size:10px">✕ ลบ</button>'
+      +'</div>'
+
+      // TOOLBAR
+      +'<div class="note-toolbar">'
+        // Undo
+        +'<button class="note-tool" id="note-undo-btn" title="Undo (Ctrl+Z)" style="opacity:0.4">↩ Undo</button>'
+        +'<div class="note-tool-sep"></div>'
+        // Format
+        +'<button class="note-tool" data-wrap="**|**" title="Bold"><b>B</b></button>'
+        +'<button class="note-tool" data-wrap="_|_" title="Italic"><i>I</i></button>'
+        +'<button class="note-tool" data-wrap="`|`" title="Code">&lt;/&gt;</button>'
+        +'<div class="note-tool-sep"></div>'
+        // Headings
+        +'<button class="note-tool" data-prefix="# ">H1</button>'
+        +'<button class="note-tool" data-prefix="## ">H2</button>'
+        +'<button class="note-tool" data-prefix="### ">H3</button>'
+        +'<div class="note-tool-sep"></div>'
+        // List / Quote / HR
+        +'<button class="note-tool" data-prefix="- ">• List</button>'
+        +'<button class="note-tool" data-prefix="> ">❝</button>'
+        +'<button class="note-tool" data-prefix="---\n">—</button>'
+        +'<div class="note-tool-sep"></div>'
+        // Highlight
+        +'<span style="font-family:var(--mono);font-size:9px;color:var(--text3);padding:0 4px">HL:</span>'
+        +'<button class="note-color-swatch" data-hl="y" style="background:#f0c96a66" title="Highlight เหลือง ==text=="></button>'
+        +'<button class="note-color-swatch" data-hl="g" style="background:rgba(46,216,136,0.4)" title="Highlight เขียว ==g:text=="></button>'
+        +'<button class="note-color-swatch" data-hl="r" style="background:rgba(240,90,74,0.4)" title="Highlight แดง ==r:text=="></button>'
+        +'<button class="note-color-swatch" data-hl="b" style="background:rgba(79,142,247,0.4)" title="Highlight ฟ้า ==b:text=="></button>'
+        +'<div class="note-tool-sep"></div>'
+        // Font color
+        +'<span style="font-family:var(--mono);font-size:9px;color:var(--text3);padding:0 4px">A:</span>'
+        +'<button class="note-color-swatch" data-fc="g" style="background:var(--gold)" title="ทอง [[g:text]]"></button>'
+        +'<button class="note-color-swatch" data-fc="n" style="background:var(--green)" title="เขียว [[n:text]]"></button>'
+        +'<button class="note-color-swatch" data-fc="r" style="background:var(--red)" title="แดง [[r:text]]"></button>'
+        +'<button class="note-color-swatch" data-fc="b" style="background:var(--blue)" title="ฟ้า [[b:text]]"></button>'
+        +'<button class="note-color-swatch" data-fc="p" style="background:var(--purple)" title="ม่วง [[p:text]]"></button>'
+      +'</div>'
+
+      // EDITOR BODY
+      +'<div class="note-body">'
+        +'<textarea class="note-textarea" id="note-textarea" placeholder="เริ่มเขียน...">'+escHtml(note.content)+'</textarea>'
+        +'<div class="note-preview" id="note-preview-div"></div>'
+      +'</div>'
+
+      // IMAGE BAR
+      +'<div class="note-img-bar" id="note-img-bar">'
+        +'<label>รูปภาพ</label>'
+        +'<button class="note-img-add-btn" id="note-img-add-btn">📎 แนบรูป</button>'
+        +'<input type="file" id="note-img-file" accept="image/*" style="display:none">'
+        +'<select id="note-img-size" style="background:var(--s1);border:1px solid var(--b1);border-radius:5px;color:var(--text2);font-family:var(--mono);font-size:10px;padding:3px 8px;outline:none;cursor:pointer" title="ขนาดรูปเมื่อแทรก">'
+          +'<option value="s">S — เล็ก (25%)</option>'
+          +'<option value="m" selected>M — กลาง (50%)</option>'
+          +'<option value="l">L — ใหญ่ (75%)</option>'
+          +'<option value="f">Full — เต็มความกว้าง</option>'
+        +'</select>'
+        +'<span style="font-family:var(--mono);font-size:9px;color:var(--text3)">กดรูปเพื่อแทรก · ✕ เพื่อลบ</span>'
+        +'<div id="note-img-thumbs" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start"></div>'
+      +'</div>'
+
+      // FOOTER
+      +'<div class="note-footer">'
+        +'<span id="note-footer-status">บันทึกอัตโนมัติ</span>'
+        +'<span id="note-char-count">'+(note.content||'').length+' ตัวอักษร</span>'
+      +'</div>';
+
+    /* Wire textarea */
+    var ta=document.getElementById('note-textarea');
+    ta.addEventListener('keydown',function(e){
+      // Ctrl+Z = Undo
+      if((e.ctrlKey||e.metaKey)&&e.key==='z'){
+        e.preventDefault(); doUndo(); return;
+      }
+      pushUndo(ta.value);
+    });
+    ta.addEventListener('input',function(){
+      autoSave();
+      var cc=document.getElementById('note-char-count');
+      if(cc) cc.textContent=ta.value.length+' ตัวอักษร';
+    });
+
+    document.getElementById('note-title-input').addEventListener('input',autoSave);
+    document.getElementById('note-tag-select').addEventListener('change',autoSave);
+    document.getElementById('note-del-btn').addEventListener('click',function(){deleteNote(note.id);});
+    document.getElementById('note-undo-btn').addEventListener('click',doUndo);
+
+    /* Toolbar format buttons */
+    wrap.querySelectorAll('.note-tool[data-wrap]').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var w=btn.dataset.wrap.split('|');
+        var s=ta.selectionStart,e=ta.selectionEnd,sel=ta.value.substring(s,e);
+        pushUndo(ta.value);
+        ta.value=ta.value.slice(0,s)+w[0]+sel+w[1]+ta.value.slice(e);
+        ta.selectionStart=s+w[0].length; ta.selectionEnd=e+w[0].length;
+        ta.focus(); autoSave();
+      });
+    });
+    wrap.querySelectorAll('.note-tool[data-prefix]').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var pr=btn.dataset.prefix;
+        var s=ta.selectionStart,val=ta.value;
+        var ls=val.lastIndexOf('\n',s-1)+1;
+        pushUndo(val);
+        ta.value=val.slice(0,ls)+pr+val.slice(ls);
+        ta.selectionStart=ta.selectionEnd=s+pr.length;
+        ta.focus(); autoSave();
+      });
+    });
+
+    /* Highlight swatches */
+    wrap.querySelectorAll('[data-hl]').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var c=btn.dataset.hl;
+        var s=ta.selectionStart,e=ta.selectionEnd,sel=ta.value.substring(s,e)||'text';
+        var tag=c==='y'?'=='+sel+'==':'=='+c+':'+sel+'==';
+        pushUndo(ta.value);
+        ta.value=ta.value.slice(0,s)+tag+ta.value.slice(e);
+        ta.selectionStart=s; ta.selectionEnd=s+tag.length;
+        ta.focus(); autoSave();
+      });
+    });
+
+    /* Font color swatches */
+    wrap.querySelectorAll('[data-fc]').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var c=btn.dataset.fc;
+        var s=ta.selectionStart,e=ta.selectionEnd,sel=ta.value.substring(s,e)||'text';
+        var tag='[['+c+':'+sel+']]';
+        pushUndo(ta.value);
+        ta.value=ta.value.slice(0,s)+tag+ta.value.slice(e);
+        ta.selectionStart=s; ta.selectionEnd=s+tag.length;
+        ta.focus(); autoSave();
+      });
+    });
+
+    /* Image attach */
+    var imgAdd=document.getElementById('note-img-add-btn');
+    var imgFile=document.getElementById('note-img-file');
+    if(imgAdd) imgAdd.addEventListener('click',function(){imgFile.click();});
+    if(imgFile) imgFile.addEventListener('change',function(ev){
+      var file=ev.target.files[0]; if(!file) return;
+      var reader=new FileReader();
+      reader.onload=function(e2){
+        if(!note.images) note.images=[];
+        note.images.push(e2.target.result);
+        saveNotes(); renderImgThumbs(note);
+      };
+      reader.readAsDataURL(file);
+      imgFile.value='';
+    });
+    renderImgThumbs(note);
+    updatePreviewBtn();
+    updateUndoBtn();
+  }
+
+  function renderImgThumbs(note){
+    var thumbsWrap=document.getElementById('note-img-thumbs'); if(!thumbsWrap) return;
+    thumbsWrap.innerHTML='';
+    (note.images||[]).forEach(function(src,i){
+      var wrap=document.createElement('div');
+      wrap.style.cssText='position:relative;display:inline-flex;flex-direction:column;align-items:center;gap:4px';
+
+      var img=document.createElement('img');
+      img.className='note-img-thumb'; img.src=src; img.title='คลิกเพื่อแทรกในเนื้อหา';
+      img.addEventListener('click',function(){
+        var ta=document.getElementById('note-textarea'); if(!ta) return;
+        var sz=document.getElementById('note-img-size')?document.getElementById('note-img-size').value:'m';
+        var tag='\n![รูป'+(i+1)+'|'+sz+'](img:'+i+')\n';
+        var s=ta.selectionStart; pushUndo(ta.value);
+        ta.value=ta.value.slice(0,s)+tag+ta.value.slice(s);
+        ta.selectionStart=ta.selectionEnd=s+tag.length;
+        ta.focus(); autoSave();
+      });
+
+      // Delete button
+      var del=document.createElement('button');
+      del.textContent='✕';
+      del.style.cssText='position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--red);border:none;color:white;font-size:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:var(--mono);padding:0;z-index:2';
+      del.title='ลบรูปนี้';
+      del.addEventListener('click',function(e){
+        e.stopPropagation();
+        if(!confirm('ลบรูปนี้?')) return;
+        note.images.splice(i,1);
+        // Update img refs in content
+        var ta=document.getElementById('note-textarea');
+        if(ta){
+          note.content=ta.value;
+          // shift img indices after deleted one
+          note.content=note.content.replace(/!\[([^\]]*)\]\(img:(\d+)\)/g,function(m,alt,idx2){
+            var n2=parseInt(idx2);
+            if(n2===i) return '';
+            if(n2>i) return '!['+alt+'](img:'+(n2-1)+')';
+            return m;
+          });
+          ta.value=note.content;
+        }
+        saveNotes(); renderImgThumbs(note); autoSave();
+      });
+
+      wrap.appendChild(del);
+      wrap.appendChild(img);
+      thumbsWrap.appendChild(wrap);
+    });
+  }
+
+  /* ── PREVIEW ── */
+  function updatePreviewBtn(){
+    var btn=document.getElementById('note-btn-preview');
+    if(btn) btn.textContent=isPreview?'✏️ แก้ไข':'👁 Preview';
+    var ta=document.getElementById('note-textarea');
+    var pv=document.getElementById('note-preview-div');
+    if(ta) ta.style.display=isPreview?'none':'block';
+    if(pv) pv.classList.toggle('show',isPreview);
+  }
+
+  function showPreview(note){
+    var pv=document.getElementById('note-preview-div'); if(!pv) return;
+    pv.innerHTML=mdToHtml(note.content||'',note.images||[]);
+  }
+
+  function mdToHtml(md,imgs){
+    imgs=imgs||[];
+    var h=md
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      // code block
+      .replace(/```([^`]*)```/g,'<pre>$1</pre>')
+      // headings
+      .replace(/^### (.+)$/gm,'<h3>$1</h3>')
+      .replace(/^## (.+)$/gm,'<h2>$1</h2>')
+      .replace(/^# (.+)$/gm,'<h1>$1</h1>')
+      // hr
+      .replace(/^---$/gm,'<hr>')
+      // blockquote
+      .replace(/^&gt; (.+)$/gm,'<blockquote>$1</blockquote>')
+      // bold/italic
+      .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+      .replace(/_(.+?)_/g,'<em>$1</em>')
+      // inline code
+      .replace(/`(.+?)`/g,'<code>$1</code>')
+      // highlight ==c:text== or ==text==
+      .replace(/==([grb]):(.+?)==/g,function(m,c,t){return '<mark class="hl-'+c+'">'+t+'</mark>';})
+      .replace(/==(.+?)==/g,'<mark class="hl-y">$1</mark>')
+      // font color [[c:text]]
+      .replace(/\[\[([gnrbp]):(.+?)\]\]/g,function(m,c,t){return '<span class="fc-'+c+'">'+t+'</span>';})
+      // image ref ![alt|size](img:N)
+      .replace(/!\[([^\]]*)\]\(img:(\d+)\)/g,function(m,alt,idx){
+        var parts=alt.split('|'); var label=parts[0]; var sz=parts[1]||'m';
+        var src=imgs[parseInt(idx)];
+        if(!src) return '<span style="color:var(--text3)">[รูปภาพ '+idx+']</span>';
+        var w={s:'25%',m:'50%',l:'75%',f:'100%'}[sz]||'50%';
+        return '<img src="'+src+'" alt="'+label+'" style="width:'+w+';max-width:100%;border-radius:8px;border:1px solid var(--b1);margin:8px 0;display:block">';
+      })
+      // list
+      .replace(/^- (.+)$/gm,'<li>$1</li>')
+      .replace(/(<li>[^<]+<\/li>)+/g,'<ul>$&</ul>')
+      // paragraph
+      .replace(/\n\n/g,'</p><p>')
+      .replace(/^(?!<[huplb]|<hr|<pre)(.+)$/gm,'<p>$1</p>');
+    return h;
+  }
+
+  /* ── INIT ── */
+  function initNote(){
+    renderNoteList();
+    if(notes.length&&!currentNoteId) openNote(notes[0].id);
+    var pvBtn=document.getElementById('note-btn-preview');
+    if(pvBtn) pvBtn.addEventListener('click',function(){
+      var note=getCurrentNote(); if(!note) return;
+      isPreview=!isPreview;
+      if(isPreview){
+        var ta=document.getElementById('note-textarea');
+        if(ta) note.content=ta.value;
+        showPreview(note);
+      }
+      updatePreviewBtn();
+    });
+    var newBtn=document.getElementById('note-btn-new');
+    if(newBtn) newBtn.addEventListener('click',newNote);
+    var addBtn=document.getElementById('note-list-add-btn');
+    if(addBtn) addBtn.addEventListener('click',newNote);
+  }
+  window._initNote=initNote;
+})();
+
+function switchPage(p,tabEl){
+  document.querySelectorAll('.page-wrap').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(el=>el.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');tabEl.classList.add('active');
+  if(p==='game')setTimeout(initGame,50);
+  if(p==='wish')renderWishPage();
+  if(p==='tools'&&window._initPT)window._initPT();
+  if(p==='note'&&window._initNote)window._initNote();
+}
+window.switchPage=switchPage;
+</script>
+</body>
+</html>
